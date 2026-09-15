@@ -14,17 +14,17 @@ class CampaignMapScreen extends StatelessWidget {
       body: SafeArea(
         child: Consumer<GameController>(
           builder: (context, controller, _) {
-            return Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  _buildHeader(controller),
-                  const SizedBox(height: 24),
-                  Expanded(
-                    child: _buildNodeList(context, controller),
-                  ),
-                ],
+            return SingleChildScrollView(
+              child: Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    _buildHeader(controller),
+                    const SizedBox(height: 24),
+                    _buildNodeList(context, controller),
+                  ],
+                ),
               ),
             );
           },
@@ -73,10 +73,10 @@ class CampaignMapScreen extends StatelessWidget {
   Widget _buildNodeList(BuildContext context, GameController controller) {
     final nodes = controller.campaign.nodes;
 
-    return ListView.builder(
-      itemCount: nodes.length,
-      itemBuilder: (context, index) {
-        final node = nodes[index];
+    return Column(
+      children: nodes.asMap().entries.map((entry) {
+        final index = entry.key;
+        final node = entry.value;
         final isLast = index == nodes.length - 1;
 
         return _CampaignNode(
@@ -86,7 +86,7 @@ class CampaignMapScreen extends StatelessWidget {
               ? () => _startBattle(context, controller)
               : null,
         );
-      },
+      }).toList(),
     );
   }
 
