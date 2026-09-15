@@ -47,29 +47,31 @@ class BattleScreen extends StatelessWidget {
 
   Widget _buildBattleContent(
       BuildContext context, GameController controller, GameState state) {
-    return Padding(
-      padding: const EdgeInsets.all(14.0),
-      child: Column(
-        children: [
-          _buildHeader(state),
-          const SizedBox(height: 12),
-          _buildHealthBars(state),
-          const SizedBox(height: 12),
-          BattleLog(log: state.log),
-          const SizedBox(height: 12),
-          ResourceDisplay(
-            stone: state.attacker.stone,
-            food: state.attacker.food,
-            gold: state.attacker.gold,
-          ),
-          const SizedBox(height: 10),
-          _buildHandHeader(state),
-          const SizedBox(height: 8),
-          _buildHand(controller, state),
-          const SizedBox(height: 12),
-          _buildActions(context, controller, state),
-          _buildHint(controller, state),
-        ],
+    return SingleChildScrollView(
+      child: Padding(
+        padding: const EdgeInsets.all(14.0),
+        child: Column(
+          children: [
+            _buildHeader(state),
+            const SizedBox(height: 12),
+            _buildHealthBars(state),
+            const SizedBox(height: 12),
+            BattleLog(log: state.log),
+            const SizedBox(height: 12),
+            ResourceDisplay(
+              stone: state.attacker.stone,
+              food: state.attacker.food,
+              gold: state.attacker.gold,
+            ),
+            const SizedBox(height: 10),
+            _buildHandHeader(state),
+            const SizedBox(height: 8),
+            _buildHand(controller, state),
+            const SizedBox(height: 12),
+            _buildActions(context, controller, state),
+            _buildHint(controller, state),
+          ],
+        ),
       ),
     );
   }

@@ -151,10 +151,16 @@ flutter pub get
 # Run on a connected device or emulator
 flutter run
 
+# Run on macOS desktop (if on macOS)
+flutter run -d macos
+
 # Or build for release
-flutter build apk  # Android
-flutter build ios  # iOS (requires macOS + Xcode)
+flutter build apk     # Android
+flutter build ios     # iOS (requires macOS + Xcode)
+flutter build macos   # macOS desktop (requires macOS)
 ```
+
+**Platform support**: Android, iOS, and macOS desktop. The UI adapts to both tall phone screens (portrait) and shorter desktop windows via scrollable layouts.
 
 The app opens to the campaign map. Tap "LAY SIEGE" to start a battle. During battle:
 - Tap a card to play it (if you can afford the cost)
