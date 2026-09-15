@@ -1,6 +1,8 @@
-# Siege — Pure Dart Game Engine
+# Siege — Castle Hero
 
-A card-based siege game engine built in pure Dart. This is **milestone 1**: the complete game logic, AI, and campaign system with **zero Flutter dependencies** in the engine layer.
+A card-based siege game for mobile. Command a besieging army, take castle after castle in a card duel, and march to the crown.
+
+**Status**: Milestone 2 complete — Pure Dart engine + Flutter UI. Playable single-player campaign with AI opponent across 5 difficulty tiers.
 
 ## Architecture
 
@@ -19,7 +21,20 @@ lib/
     tiers.dart     # Difficulty tier definitions
     campaign.dart  # Campaign progression state
   
-  ui/              # Flutter widgets (future milestone — stub only)
+  ui/              # Flutter UI layer
+    game_controller.dart  # State management (ChangeNotifier)
+    theme.dart            # Dark medieval theme
+    screens/
+      campaign_map_screen.dart  # Campaign map with 5 nodes
+      battle_screen.dart        # Battle UI
+    widgets/
+      health_bar.dart       # Health pool visualization
+      resource_display.dart # Stone, food, gold
+      card_widget.dart      # Card rendering
+      battle_log.dart       # Recent events
+      battle_overlay.dart   # Win/loss/crowned overlay
+  
+  main.dart        # App entry point
   
 test/
   engine_test.dart      # Unit tests for core engine
@@ -124,13 +139,38 @@ Linear progression: 5 nodes (one per tier). Win advances, lose retries. Beat The
 
 **No persistence in this milestone** — sessions start fresh at The Outpost. Persistence is future work.
 
+## Running the App
+
+```bash
+# Ensure Flutter is available
+export PATH="$HOME/flutter/bin:$PATH"
+
+# Get dependencies
+flutter pub get
+
+# Run on a connected device or emulator
+flutter run
+
+# Or build for release
+flutter build apk  # Android
+flutter build ios  # iOS (requires macOS + Xcode)
+```
+
+The app opens to the campaign map. Tap "LAY SIEGE" to start a battle. During battle:
+- Tap a card to play it (if you can afford the cost)
+- Or use "DISCARD" to discard a card
+- Either action ends your turn; the AI responds automatically
+- Win by reducing the castle's wall to 0
+- Lose if your catapult reaches 0
+- Beat all 5 castles to be crowned king
+
 ## Running Tests
 
 ```bash
 # Ensure Flutter is available
 export PATH="$HOME/flutter/bin:$PATH"
 
-# Run all tests
+# Run all tests (engine + simulation + campaign)
 flutter test
 
 # Run specific test suites
@@ -200,8 +240,9 @@ This milestone establishes the foundation for all future work:
 4. **Save/load** is JSON serialization (already implemented)
 5. **Headless testing** validates balance without UI (proven in this milestone's simulation harness)
 
-## Success Criteria ✓
+## Milestones
 
+### ✅ Milestone 1: Pure Dart Engine
 - [x] Pure Dart engine with zero Flutter imports in `lib/engine/` and `lib/campaign/`
 - [x] Complete card system (12 cards: 6 attacker, 6 defender)
 - [x] Turn sequence with persistent effects (infantry, fire DoT)
@@ -213,6 +254,24 @@ This milestone establishes the foundation for all future work:
 - [x] Headless tests proving games terminate
 - [x] JSON-serializable `GameState`
 - [x] Analyzer clean, tests green
+
+### ✅ Milestone 2: Flutter UI
+- [x] Campaign map screen with 5 nodes (conquered/current/locked states)
+- [x] Battle screen with health bars, resources, hand, log
+- [x] Card interaction (tap to play, discard)
+- [x] AI turn automation (AI responds after player acts)
+- [x] Win/loss/crowned overlays
+- [x] Navigation (map ↔ battle)
+- [x] Dark medieval mobile-first theme
+- [x] State management (ChangeNotifier)
+- [x] Analyzer clean, all engine tests still pass
+
+### 🚧 Future Work
+- Multiplayer (hotseat, Bluetooth, online)
+- Persistence (save/load campaign progress)
+- Meta layer (unlocks, loadouts, upgrades)
+- Balance tuning
+- Sound & polish
 
 ## Running the Engine Headless
 
@@ -248,6 +307,17 @@ void main() {
 }
 ```
 
----
+## UI Design Notes
 
-**Ready for the next milestone**: A Flutter UI layer that renders this battle system and lets humans play the campaign.
+The UI implements a **dark medieval mobile-first theme** inspired by the design brief:
+
+- **Color palette**: Dark background (#12151b), warm attacker orange (#ef8b4a), cool defender blue (#6fa6c9), danger red, good green, gold accents
+- **Typography**: Oswald for headers (uppercase, bold), Inter for body text
+- **Layout**: Portrait-optimized for phones; all battle info visible at once
+- **Focal point**: Health bars dominate the top of the battle screen (the depletion race is the hero)
+- **Persistent effects**: Infantry and fire DoT shown as tags below health bars
+- **Cards**: 3-card hand with tier dots (green/gold/orange), cost display, effect text
+- **Battle log**: Recent 5 events scroll; newest at bottom
+- **Overlays**: Centered modal for win/loss/crowned states
+
+The demo HTML's CSS was **not** used as a visual reference — only its behavior and information architecture informed the Flutter implementation.
