@@ -16,42 +16,16 @@ class CampaignMapScreen extends StatelessWidget {
           builder: (context, controller, _) {
             return Stack(
               children: [
-                // Campaign map background
-                Positioned.fill(
-                  child: Image.asset(
-                    'assets/art/campaign/campaign-map.jpg',
-                    fit: BoxFit.cover,
-                  ),
-                ),
-                // Dark gradient for readability
+                // TODO: Replace with clean 9:16 campaign map plate when Art delivers
+                // assets/art/production/plates/campaign-map-9x16.png
+                // Interim: solid night background to avoid ghosting with old baked-label map
                 Positioned.fill(
                   child: Container(
-                    decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        begin: Alignment.topCenter,
-                        end: Alignment.bottomCenter,
-                        colors: [
-                          SiegeTheme.background.withOpacity(0.5),
-                          SiegeTheme.background.withOpacity(0.8),
-                        ],
-                      ),
-                    ),
+                    color: SiegeTheme.background, // #0B1020 night base
                   ),
                 ),
-                // Content overlay
-                SingleChildScrollView(
-                  child: Padding(
-                    padding: const EdgeInsets.all(16.0),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        _buildHeader(controller),
-                        const SizedBox(height: 24),
-                        _buildNodeList(context, controller),
-                      ],
-                    ),
-                  ),
-                ),
+                // Campaign path composition in Flutter
+                _buildCampaignPath(context, controller),
               ],
             );
           },
@@ -60,12 +34,56 @@ class CampaignMapScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildHeader(GameController controller) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
+  Widget _buildCampaignPath(BuildContext context, GameController controller) {
+    final nodes = controller.campaign.nodes;
+    final screenHeight = MediaQuery.of(context).size.height;
+    
+    return Stack(
       children: [
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        // Header
+        Positioned(
+          top: 16,
+          left: 16,
+          right: 16,
+          child: _buildHeader(controller),
+        ),
+        // 5 campaign nodes positioned vertically along center path
+        ...nodes.asMap().entries.map((entry) {
+          final index = entry.key;
+          final node = entry.value;
+          final isLast = index == nodes.length - 1;
+          
+          // Position nodes vertically from top to bottom with spacing
+          // Reserve top ~100px for header, bottom ~100px for margin
+          final availableHeight = screenHeight - 200;
+          final spacing = availableHeight / (nodes.length + 1);
+          final topPosition = 120 + (spacing * (index + 1));
+          
+          return Positioned(
+            top: topPosition,
+            left: 0,
+            right: 0,
+            child: Center(
+              child: _CampaignNode(
+                node: node,
+                isLast: isLast,
+                onTap: node.status == NodeStatus.current
+                    ? () => _startBattle(context, controller)
+                    : null,
+              ),
+            ),
+          );
+        }).toList(),
+      ],
+    );
+  }
+
+  Widget _buildHeader(GameController controller) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
               'CAMPAIGN',
@@ -77,43 +95,30 @@ class CampaignMapScreen extends StatelessWidget {
                 color: SiegeTheme.ink,
               ),
             ),
-            if (controller.isCrowned())
-              const Text(
-                '👑',
-                style: TextStyle(fontSize: 24),
+            const SizedBox(height: 4),
+            Text(
+              'March to the crown',
+              style: TextStyle(
+                fontFamily: 'Inter',
+                fontSize: 14,
+                color: SiegeTheme.muted,
               ),
+            ),
           ],
         ),
-        const SizedBox(height: 4),
-        Text(
-          'March to the crown',
-          style: TextStyle(
-            fontFamily: 'Inter',
-            fontSize: 14,
-            color: SiegeTheme.muted,
+        if (controller.isCrowned())
+          Container(
+            padding: const EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              color: SiegeTheme.attackerGold.withOpacity(0.2),
+              shape: BoxShape.circle,
+            ),
+            child: const Text(
+              '👑',
+              style: TextStyle(fontSize: 24),
+            ),
           ),
-        ),
       ],
-    );
-  }
-
-  Widget _buildNodeList(BuildContext context, GameController controller) {
-    final nodes = controller.campaign.nodes;
-
-    return Column(
-      children: nodes.asMap().entries.map((entry) {
-        final index = entry.key;
-        final node = entry.value;
-        final isLast = index == nodes.length - 1;
-
-        return _CampaignNode(
-          node: node,
-          isLast: isLast,
-          onTap: node.status == NodeStatus.current
-              ? () => _startBattle(context, controller)
-              : null,
-        );
-      }).toList(),
     );
   }
 
