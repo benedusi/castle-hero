@@ -327,3 +327,49 @@ The UI implements a **dark medieval mobile-first theme** inspired by the design 
 - **Overlays**: Centered modal for win/loss/crowned states
 
 The demo HTML's CSS was **not** used as a visual reference — only its behavior and information architecture informed the Flutter implementation.
+
+## Art Integration
+
+**Status**: Art integration milestone complete. Night siege illustration style with atmospheric painterly backgrounds.
+
+### Art Bible
+
+The visual design follows the locked Art Bible (see `uploads/SIEGE-ART-BIBLE.md`):
+- **Style**: Soft painterly night siege with torchlight on wet stone
+- **Palette**: Night base (#0B1020), attacker warm amber (#E8A04A), defender cool teal (#2A6B6B)
+- **Layout**: Full battlefield plate backgrounds (catapult left, wall/gate right), HP overlays, bottom chrome with resources and cards
+
+### Asset Organization
+
+All game art is stored in `assets/art/`:
+
+```
+assets/art/
+  cards/           # Individual card faces (12 cards) + card back
+  backgrounds/     # Battle scene composites (empty/fire/midfight) + stage moods
+  ui/              # Resource icons, status indicators, result overlays
+  campaign/        # Campaign map + node state icons
+```
+
+### Asset Sources
+
+- **Original concept sheets**: Uploaded as JPEG composites (1280×720)
+- **Processing**: Multi-item sheets were sliced into individual PNG assets using `slice_assets.py`
+  - Card sheets: 3 faces per sheet → 12 individual card images
+  - Resource icons: 3 icons → stone/food/gold
+  - Status indicators: 2 badges → fire/infantry
+  - Campaign nodes: 4 states → conquered/current/locked/crown
+  - Result overlays: 3 outcomes → castle taken/siege repelled/crowned king
+- **Format**: Sliced assets saved as PNG for transparency support; backgrounds kept as JPEG
+- **Note**: These are concept/mock sheets, not production-sliced atlases — cropping assumptions documented in slicing script
+
+### Visual Features Implemented
+
+- ✅ Battle screen with dynamic backgrounds (switches based on fire/turn state)
+- ✅ Art Bible color palette (night base, warm/cool force colors)
+- ✅ Card faces showing real art with warm gold rims for attacker cards
+- ✅ Resource display using art icons (stone/food/gold)
+- ✅ Status indicators with art badges (fire DoT, infantry)
+- ✅ Campaign map with background art and node state visuals
+- ✅ Result overlays with art-backed modals (Castle Taken / Siege Repelled / Crowned King)
+- ✅ Semi-transparent UI chrome for battlefield visibility

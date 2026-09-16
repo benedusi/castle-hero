@@ -94,17 +94,19 @@ class HealthBar extends StatelessWidget {
           Padding(
             padding: const EdgeInsets.only(top: 6.0),
             child: Wrap(
-              spacing: 6,
+              spacing: 8,
               children: [
                 if (fire.isNotEmpty)
-                  _buildTag(
-                    '🔥 ${isDefender ? 'gate' : 'catapult'} ablaze (${fire.join('·')})',
-                    SiegeTheme.attacker,
+                  _buildStatusBadge(
+                    'assets/art/ui/status_fire.png',
+                    '${fire.join('·')}',
+                    SiegeTheme.danger,
                   ),
                 if (infantry != null && infantry! > 0)
-                  _buildTag(
-                    '⚔️ infantry ×$infantry',
-                    SiegeTheme.ink,
+                  _buildStatusBadge(
+                    'assets/art/ui/status_infantry.png',
+                    '×$infantry',
+                    SiegeTheme.attacker,
                   ),
               ],
             ),
@@ -128,6 +130,38 @@ class HealthBar extends StatelessWidget {
           fontWeight: FontWeight.w600,
           color: color,
         ),
+      ),
+    );
+  }
+
+  Widget _buildStatusBadge(String assetPath, String text, Color color) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      decoration: BoxDecoration(
+        color: SiegeTheme.panel2.withOpacity(0.9),
+        border: Border.all(color: color.withOpacity(0.5), width: 1.5),
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Image.asset(
+            assetPath,
+            width: 20,
+            height: 20,
+            fit: BoxFit.contain,
+          ),
+          const SizedBox(width: 4),
+          Text(
+            text,
+            style: TextStyle(
+              fontFamily: 'Oswald',
+              fontSize: 13,
+              fontWeight: FontWeight.w700,
+              color: color,
+            ),
+          ),
+        ],
       ),
     );
   }

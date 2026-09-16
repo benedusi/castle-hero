@@ -1,21 +1,28 @@
 import 'package:flutter/material.dart';
 
+// Art Bible palette (locked)
 class SiegeTheme {
-  static const Color background = Color(0xFF12151b);
-  static const Color panel = Color(0xFF1b2028);
-  static const Color panel2 = Color(0xFF232b36);
-  static const Color ink = Color(0xFFe9e6df);
-  static const Color muted = Color(0xFF8b94a1);
-  static const Color line = Color(0xFF2c3543);
+  // Core palette
+  static const Color background = Color(0xFF0B1020); // Night base
+  static const Color panel = Color(0xFF1A2338); // Mid stone
+  static const Color panel2 = Color(0xFF12151b); // Darker variant
+  static const Color ink = Color(0xFFe9e6df); // Light text (keeping existing)
+  static const Color muted = Color(0xFF8A9BB0); // Muted steel
+  static const Color line = Color(0xFF2c3543); // Keeping existing line color
 
-  static const Color attacker = Color(0xFFef8b4a);
-  static const Color attackerDim = Color(0xFF7a4e30);
-  static const Color defender = Color(0xFF6fa6c9);
-  static const Color defenderDim = Color(0xFF3a566a);
+  // Force colors (warm/cool)
+  static const Color attacker = Color(0xFFE8A04A); // Attacker amber
+  static const Color attackerDim = Color(0xFFC45C26); // Attacker ember
+  static const Color attackerGold = Color(0xFFF0D9A8); // Soft gold UI
+  
+  static const Color defender = Color(0xFF2A6B6B); // Defender teal
+  static const Color defenderDim = Color(0xFF1a4545); // Darker teal
+  static const Color defenderLight = Color(0xFF7EC8C8); // Ice highlight
 
-  static const Color danger = Color(0xFFe0554d);
-  static const Color good = Color(0xFF7cb87f);
-  static const Color gold = Color(0xFFe6b653);
+  // Status colors
+  static const Color danger = Color(0xFFFF6B2C); // Fire only
+  static const Color good = Color(0xFF7cb87f); // Keeping existing
+  static const Color gold = Color(0xFFF0D9A8); // Soft gold
 
   static ThemeData get darkTheme => ThemeData.dark().copyWith(
         scaffoldBackgroundColor: background,

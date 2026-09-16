@@ -14,18 +14,45 @@ class CampaignMapScreen extends StatelessWidget {
       body: SafeArea(
         child: Consumer<GameController>(
           builder: (context, controller, _) {
-            return SingleChildScrollView(
-              child: Padding(
-                padding: const EdgeInsets.all(16.0),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    _buildHeader(controller),
-                    const SizedBox(height: 24),
-                    _buildNodeList(context, controller),
-                  ],
+            return Stack(
+              children: [
+                // Campaign map background
+                Positioned.fill(
+                  child: Image.asset(
+                    'assets/art/campaign/campaign-map.jpg',
+                    fit: BoxFit.cover,
+                  ),
                 ),
-              ),
+                // Dark gradient for readability
+                Positioned.fill(
+                  child: Container(
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        begin: Alignment.topCenter,
+                        end: Alignment.bottomCenter,
+                        colors: [
+                          SiegeTheme.background.withOpacity(0.5),
+                          SiegeTheme.background.withOpacity(0.8),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+                // Content overlay
+                SingleChildScrollView(
+                  child: Padding(
+                    padding: const EdgeInsets.all(16.0),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        _buildHeader(controller),
+                        const SizedBox(height: 24),
+                        _buildNodeList(context, controller),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
             );
           },
         ),
@@ -136,54 +163,39 @@ class _CampaignNode extends StatelessWidget {
   }
 
   Widget _buildBadge(bool isCompleted, bool isCurrent, bool isLocked) {
-    final icon = isCompleted ? '🏳️' : (isLast ? '👑' : '🏰');
-    final color = isCompleted
-        ? SiegeTheme.good
-        : isCurrent
-            ? SiegeTheme.attacker
-            : SiegeTheme.line;
+    // Choose node state icon
+    String assetPath;
+    if (isCompleted) {
+      assetPath = 'assets/art/campaign/node_conquered.png';
+    } else if (isLast) {
+      assetPath = 'assets/art/campaign/node_crown.png';
+    } else if (isCurrent) {
+      assetPath = 'assets/art/campaign/node_current.png';
+    } else {
+      assetPath = 'assets/art/campaign/node_locked.png';
+    }
 
-    return Stack(
-      children: [
-        Container(
-          width: 52,
-          height: 52,
-          decoration: BoxDecoration(
-            color: SiegeTheme.panel,
-            shape: BoxShape.circle,
-            border: Border.all(
-              color: color,
-              width: 2,
-            ),
-          ),
-          child: Center(
-            child: Text(
-              icon,
-              style: const TextStyle(fontSize: 24),
-            ),
-          ),
+    return Container(
+      width: 64,
+      height: 64,
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        boxShadow: isCurrent
+            ? [
+                BoxShadow(
+                  color: SiegeTheme.attacker.withOpacity(0.4),
+                  blurRadius: 12,
+                  spreadRadius: 2,
+                )
+              ]
+            : null,
+      ),
+      child: ClipOval(
+        child: Image.asset(
+          assetPath,
+          fit: BoxFit.cover,
         ),
-        if (isCompleted)
-          Positioned(
-            right: -2,
-            bottom: -2,
-            child: Container(
-              width: 20,
-              height: 20,
-              decoration: BoxDecoration(
-                color: SiegeTheme.good,
-                shape: BoxShape.circle,
-              ),
-              child: Center(
-                child: Icon(
-                  Icons.check,
-                  size: 12,
-                  color: SiegeTheme.background,
-                ),
-              ),
-            ),
-          ),
-      ],
+      ),
     );
   }
 

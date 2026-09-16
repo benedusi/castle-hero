@@ -14,98 +14,67 @@ class CardWidget extends StatelessWidget {
     this.onTap,
   });
 
+  String _getCardAssetPath() {
+    // Map card enum to asset path
+    switch (card.card) {
+      case AttackerCard.fire:
+        return 'assets/art/cards/fire.png';
+      case AttackerCard.volley:
+        return 'assets/art/cards/volley.png';
+      case AttackerCard.infantry:
+        return 'assets/art/cards/infantry.png';
+      case AttackerCard.fireball:
+        return 'assets/art/cards/fireball.png';
+      case AttackerCard.mercenaries:
+        return 'assets/art/cards/mercenaries.png';
+      case AttackerCard.cleanse:
+        return 'assets/art/cards/cleanse.png';
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
       onTap: canPlay ? onTap : null,
       child: AnimatedOpacity(
-        opacity: canPlay ? 1.0 : 0.45,
+        opacity: canPlay ? 1.0 : 0.5,
         duration: const Duration(milliseconds: 150),
         child: Container(
-          padding: const EdgeInsets.all(10),
           decoration: BoxDecoration(
-            color: SiegeTheme.panel,
+            borderRadius: BorderRadius.circular(8),
             border: Border.all(
-              color: canPlay ? SiegeTheme.line : SiegeTheme.line,
-              width: 1,
+              color: canPlay ? SiegeTheme.attacker : SiegeTheme.line,
+              width: canPlay ? 2 : 1,
             ),
-            borderRadius: BorderRadius.circular(11),
+            boxShadow: canPlay
+                ? [
+                    BoxShadow(
+                      color: SiegeTheme.attacker.withOpacity(0.3),
+                      blurRadius: 8,
+                      spreadRadius: 1,
+                    )
+                  ]
+                : null,
           ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Expanded(
-                    child: Text(
-                      card.name,
-                      style: TextStyle(
-                        fontFamily: 'Oswald',
-                        fontSize: 15,
-                        fontWeight: FontWeight.w600,
-                        letterSpacing: 0.30,
-                        color: SiegeTheme.ink,
-                      ),
-                    ),
-                  ),
-                  _buildTierDot(),
-                ],
-              ),
-              const SizedBox(height: 5),
-              _buildCost(),
-              const SizedBox(height: 6),
-              Expanded(
-                child: Text(
-                  card.desc,
-                  style: TextStyle(
-                    fontFamily: 'Inter',
-                    fontSize: 12,
-                    color: SiegeTheme.muted,
-                    height: 1.35,
-                  ),
-                  maxLines: 4,
-                  overflow: TextOverflow.ellipsis,
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(7),
+            child: Stack(
+              fit: StackFit.expand,
+              children: [
+                // Card art image
+                Image.asset(
+                  _getCardAssetPath(),
+                  fit: BoxFit.cover,
                 ),
-              ),
-            ],
+                // Unaffordable overlay
+                if (!canPlay)
+                  Container(
+                    color: Colors.black.withOpacity(0.5),
+                  ),
+              ],
+            ),
           ),
         ),
-      ),
-    );
-  }
-
-  Widget _buildTierDot() {
-    final color = card.tier == 1
-        ? SiegeTheme.good
-        : card.tier == 2
-            ? SiegeTheme.gold
-            : SiegeTheme.attacker;
-
-    return Container(
-      width: 7,
-      height: 7,
-      decoration: BoxDecoration(
-        color: color,
-        shape: BoxShape.circle,
-      ),
-    );
-  }
-
-  Widget _buildCost() {
-    final parts = <String>[];
-    if (card.cost.stone > 0) parts.add('${card.cost.stone}🪨');
-    if (card.cost.food > 0) parts.add('${card.cost.food}🍖');
-    if (card.cost.gold > 0) parts.add('${card.cost.gold}🪙');
-
-    return Text(
-      parts.join(' '),
-      style: TextStyle(
-        fontFamily: 'Inter',
-        fontSize: 12.5,
-        fontWeight: FontWeight.w600,
-        color: canPlay ? SiegeTheme.ink : SiegeTheme.muted,
       ),
     );
   }

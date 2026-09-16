@@ -27,32 +27,46 @@ class ResourceDisplay extends StatelessWidget {
   }
 
   Widget _buildResource(String icon, String label, int value) {
+    String assetPath;
+    switch (label) {
+      case 'stone':
+        assetPath = 'assets/art/ui/resource_stone.png';
+        break;
+      case 'food':
+        assetPath = 'assets/art/ui/resource_food.png';
+        break;
+      case 'gold':
+        assetPath = 'assets/art/ui/resource_gold.png';
+        break;
+      default:
+        assetPath = '';
+    }
+
     return Container(
-      padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 6),
+      padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 8),
       decoration: BoxDecoration(
-        color: SiegeTheme.panel,
+        color: SiegeTheme.panel.withOpacity(0.85),
         border: Border.all(color: SiegeTheme.line),
         borderRadius: BorderRadius.circular(10),
       ),
-      child: Column(
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
         children: [
+          if (assetPath.isNotEmpty)
+            Image.asset(
+              assetPath,
+              width: 24,
+              height: 24,
+              fit: BoxFit.contain,
+            ),
+          const SizedBox(width: 6),
           Text(
             '$value',
             style: TextStyle(
               fontFamily: 'Oswald',
-              fontSize: 22,
+              fontSize: 20,
               fontWeight: FontWeight.w700,
               color: SiegeTheme.ink,
-              height: 1.0,
-            ),
-          ),
-          const SizedBox(height: 2),
-          Text(
-            '$icon $label',
-            style: TextStyle(
-              fontFamily: 'Inter',
-              fontSize: 11,
-              color: SiegeTheme.muted,
             ),
           ),
         ],

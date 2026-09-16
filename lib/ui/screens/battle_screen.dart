@@ -47,32 +47,68 @@ class BattleScreen extends StatelessWidget {
 
   Widget _buildBattleContent(
       BuildContext context, GameController controller, GameState state) {
-    return SingleChildScrollView(
-      child: Padding(
-        padding: const EdgeInsets.all(14.0),
-        child: Column(
-          children: [
-            _buildHeader(state),
-            const SizedBox(height: 12),
-            _buildHealthBars(state),
-            const SizedBox(height: 12),
-            BattleLog(log: state.log),
-            const SizedBox(height: 12),
-            ResourceDisplay(
-              stone: state.attacker.stone,
-              food: state.attacker.food,
-              gold: state.attacker.gold,
-            ),
-            const SizedBox(height: 10),
-            _buildHandHeader(state),
-            const SizedBox(height: 8),
-            _buildHand(controller, state),
-            const SizedBox(height: 12),
-            _buildActions(context, controller, state),
-            _buildHint(controller, state),
-          ],
+    // Choose background based on game state
+    String backgroundAsset = 'assets/art/backgrounds/composite-battle-empty.jpg';
+    if (state.gateFire > 0) {
+      backgroundAsset = 'assets/art/backgrounds/composite-battle-fire.jpg';
+    } else if (state.turn > 3) {
+      backgroundAsset = 'assets/art/backgrounds/composite-battle-midfight.jpg';
+    }
+
+    return Stack(
+      children: [
+        // Full scene battle plate background
+        Positioned.fill(
+          child: Image.asset(
+            backgroundAsset,
+            fit: BoxFit.cover,
+          ),
         ),
-      ),
+        // Dark gradient for readability
+        Positioned.fill(
+          child: Container(
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+                colors: [
+                  Colors.black.withOpacity(0.3),
+                  Colors.black.withOpacity(0.6),
+                ],
+                stops: const [0.0, 1.0],
+              ),
+            ),
+          ),
+        ),
+        // Battle UI overlay
+        SingleChildScrollView(
+          child: Padding(
+            padding: const EdgeInsets.all(14.0),
+            child: Column(
+              children: [
+                _buildHeader(state),
+                const SizedBox(height: 12),
+                _buildHealthBars(state),
+                const SizedBox(height: 220), // Space for the middle battlefield art
+                BattleLog(log: state.log),
+                const SizedBox(height: 12),
+                ResourceDisplay(
+                  stone: state.attacker.stone,
+                  food: state.attacker.food,
+                  gold: state.attacker.gold,
+                ),
+                const SizedBox(height: 10),
+                _buildHandHeader(state),
+                const SizedBox(height: 8),
+                _buildHand(controller, state),
+                const SizedBox(height: 12),
+                _buildActions(context, controller, state),
+                _buildHint(controller, state),
+              ],
+            ),
+          ),
+        ),
+      ],
     );
   }
 
@@ -107,7 +143,7 @@ class BattleScreen extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(14.0),
       decoration: BoxDecoration(
-        color: SiegeTheme.panel,
+        color: SiegeTheme.panel.withOpacity(0.85),
         border: Border.all(color: SiegeTheme.line),
         borderRadius: BorderRadius.circular(12),
       ),

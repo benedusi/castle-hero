@@ -14,7 +14,7 @@ class BattleLog extends StatelessWidget {
       height: 100,
       padding: const EdgeInsets.all(4),
       decoration: BoxDecoration(
-        color: SiegeTheme.panel,
+        color: SiegeTheme.panel.withOpacity(0.85),
         border: Border.all(color: SiegeTheme.line),
         borderRadius: BorderRadius.circular(12),
       ),

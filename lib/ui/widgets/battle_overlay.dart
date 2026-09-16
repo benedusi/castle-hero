@@ -20,69 +20,125 @@ class BattleOverlay extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Choose result overlay art based on outcome
+    String overlayAsset;
+    if (crowned) {
+      overlayAsset = 'assets/art/ui/result_crowned_king.png';
+    } else if (won) {
+      overlayAsset = 'assets/art/ui/result_castle_taken.png';
+    } else {
+      overlayAsset = 'assets/art/ui/result_siege_repelled.png';
+    }
+
     return Container(
-      color: Color.fromRGBO(18, 21, 27, 0.85),
+      color: SiegeTheme.background.withOpacity(0.85),
       child: Center(
         child: Container(
-          margin: const EdgeInsets.all(20),
-          padding: const EdgeInsets.all(26),
+          margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 40),
           decoration: BoxDecoration(
-            color: SiegeTheme.panel,
-            border: Border.all(color: SiegeTheme.line),
             borderRadius: BorderRadius.circular(16),
           ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
+          child: Stack(
             children: [
-              Text(
-                crowned
-                    ? 'CROWNED KING 👑'
-                    : won
-                        ? 'CASTLE TAKEN'
-                        : 'SIEGE REPELLED',
-                style: TextStyle(
-                  fontFamily: 'Oswald',
-                  fontSize: 30,
-                  fontWeight: FontWeight.w700,
-                  letterSpacing: 1.8,
-                  color: crowned || won ? SiegeTheme.good : SiegeTheme.danger,
+              // Result overlay art
+              ClipRRect(
+                borderRadius: BorderRadius.circular(16),
+                child: Image.asset(
+                  overlayAsset,
+                  fit: BoxFit.cover,
+                  width: double.infinity,
                 ),
-                textAlign: TextAlign.center,
               ),
-              const SizedBox(height: 6),
-              Text(
-                _getMessage(),
-                style: TextStyle(
-                  fontFamily: 'Inter',
-                  fontSize: 14,
-                  color: SiegeTheme.muted,
-                ),
-                textAlign: TextAlign.center,
-              ),
-              const SizedBox(height: 18),
-              ElevatedButton(
-                onPressed: onContinue,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: SiegeTheme.attacker,
-                  foregroundColor: const Color(0xFF1a1109),
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 26, vertical: 12),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(10),
+              // Gradient for text readability
+              Container(
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(16),
+                  gradient: LinearGradient(
+                    begin: Alignment.topCenter,
+                    end: Alignment.bottomCenter,
+                    colors: [
+                      Colors.black.withOpacity(0.4),
+                      Colors.black.withOpacity(0.7),
+                    ],
                   ),
                 ),
-                child: Text(
-                  crowned
-                      ? 'NEW CAMPAIGN'
-                      : won
-                          ? 'MARCH ON'
-                          : 'REGROUP',
-                  style: TextStyle(
-                    fontFamily: 'Oswald',
-                    fontSize: 14,
-                    fontWeight: FontWeight.w600,
-                    letterSpacing: 0.70,
-                  ),
+              ),
+              // Content
+              Padding(
+                padding: const EdgeInsets.all(32),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      crowned
+                          ? 'CROWNED KING'
+                          : won
+                              ? 'CASTLE TAKEN'
+                              : 'SIEGE REPELLED',
+                      style: TextStyle(
+                        fontFamily: 'Oswald',
+                        fontSize: 34,
+                        fontWeight: FontWeight.w700,
+                        letterSpacing: 2.0,
+                        color: crowned || won
+                            ? SiegeTheme.attackerGold
+                            : SiegeTheme.muted,
+                        shadows: [
+                          Shadow(
+                            color: Colors.black.withOpacity(0.8),
+                            offset: const Offset(0, 2),
+                            blurRadius: 4,
+                          ),
+                        ],
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                    const SizedBox(height: 12),
+                    Text(
+                      _getMessage(),
+                      style: TextStyle(
+                        fontFamily: 'Inter',
+                        fontSize: 15,
+                        color: SiegeTheme.ink,
+                        shadows: [
+                          Shadow(
+                            color: Colors.black.withOpacity(0.8),
+                            offset: const Offset(0, 1),
+                            blurRadius: 3,
+                          ),
+                        ],
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                    const SizedBox(height: 24),
+                    ElevatedButton(
+                      onPressed: onContinue,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: crowned || won
+                            ? SiegeTheme.attacker
+                            : SiegeTheme.muted,
+                        foregroundColor: const Color(0xFF0B1020),
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 32, vertical: 14),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                      ),
+                      child: Text(
+                        crowned
+                            ? 'NEW CAMPAIGN'
+                            : won
+                                ? 'MARCH ON'
+                                : 'REGROUP',
+                        style: TextStyle(
+                          fontFamily: 'Oswald',
+                          fontSize: 15,
+                          fontWeight: FontWeight.w700,
+                          letterSpacing: 0.75,
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
               ),
             ],
