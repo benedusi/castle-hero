@@ -37,47 +37,39 @@ class CardWidget extends StatelessWidget {
     return GestureDetector(
       onTap: canPlay ? onTap : null,
       child: AnimatedOpacity(
-        opacity: canPlay ? 1.0 : 0.5,
+        opacity: canPlay ? 1.0 : 0.6,
         duration: const Duration(milliseconds: 150),
         child: Container(
+          // Production cards have baked-in rims - no second border frame
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(8),
-            border: Border.all(
-              color: canPlay ? SiegeTheme.attacker : SiegeTheme.line,
-              width: canPlay ? 2 : 1,
-            ),
+            // Soft amber glow when playable
             boxShadow: canPlay
                 ? [
                     BoxShadow(
-                      color: SiegeTheme.attacker.withOpacity(0.3),
-                      blurRadius: 8,
-                      spreadRadius: 1,
+                      color: SiegeTheme.attacker.withOpacity(0.4),
+                      blurRadius: 12,
+                      spreadRadius: 2,
                     )
                   ]
                 : null,
           ),
           child: ClipRRect(
-            borderRadius: BorderRadius.circular(7),
-            child: Container(
-              color: SiegeTheme.background,
-              child: Stack(
-                fit: StackFit.expand,
-                children: [
-                  // Card art image - use contain for varying card sizes
-                  Padding(
-                    padding: const EdgeInsets.all(2.0),
-                    child: Image.asset(
-                      _getCardAssetPath(),
-                      fit: BoxFit.contain, // Contain, not cover - cards have varying sizes
-                    ),
+            borderRadius: BorderRadius.circular(8),
+            child: Stack(
+              fit: StackFit.expand,
+              children: [
+                // Card art image - use contain for varying card sizes
+                Image.asset(
+                  _getCardAssetPath(),
+                  fit: BoxFit.contain,
+                ),
+                // Dim overlay for unaffordable cards
+                if (!canPlay)
+                  Container(
+                    color: Colors.black.withOpacity(0.4),
                   ),
-                  // Unaffordable overlay
-                  if (!canPlay)
-                    Container(
-                      color: Colors.black.withOpacity(0.5),
-                    ),
-                ],
-              ),
+              ],
             ),
           ),
         ),
