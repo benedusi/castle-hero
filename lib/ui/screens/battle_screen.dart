@@ -11,8 +11,15 @@ import '../widgets/card_widget.dart';
 import '../widgets/battle_log.dart';
 import '../widgets/battle_overlay.dart';
 
-class BattleScreen extends StatelessWidget {
+class BattleScreen extends StatefulWidget {
   const BattleScreen({super.key});
+
+  @override
+  State<BattleScreen> createState() => _BattleScreenState();
+}
+
+class _BattleScreenState extends State<BattleScreen> {
+  int? _selectedCardIndex;
 
   @override
   Widget build(BuildContext context) {
@@ -69,7 +76,7 @@ class BattleScreen extends StatelessWidget {
           left: 0,
           right: 0,
           bottom: 0,
-          height: 350,
+          height: 280, // Reduced from 350 to tighten dead band
           child: Container(
             decoration: BoxDecoration(
               gradient: LinearGradient(
@@ -149,20 +156,20 @@ class BattleScreen extends StatelessWidget {
                 children: [
                   // Battle log (1-2 lines)
                   BattleLog(log: state.log),
-                  const SizedBox(height: 10),
+                  const SizedBox(height: 8),
                   // Resources (stone/food/gold fixed order)
                   ResourceDisplay(
                     stone: state.attacker.stone,
                     food: state.attacker.food,
                     gold: state.attacker.gold,
                   ),
-                  const SizedBox(height: 10),
+                  const SizedBox(height: 8),
                   // Hand header
                   _buildHandHeader(state),
                   const SizedBox(height: 6),
                   // Hand of 3
                   _buildHand(controller, state),
-                  const SizedBox(height: 10),
+                  const SizedBox(height: 8),
                   // Play / Discard (thumb zone)
                   _buildActions(context, controller, state),
                   _buildHint(controller, state),
@@ -404,18 +411,30 @@ class BattleScreen extends StatelessWidget {
                 def.cost,
               );
 
+              final isSelected = _selectedCardIndex == index;
+              
               return Expanded(
                 child: Padding(
                   padding: EdgeInsets.only(
                     right: index < 2 ? 8.0 : 0,
                   ),
                   // Fixed aspect ratio slot - all cards equal size
-                  child: AspectRatio(
-                    aspectRatio: 2 / 3, // Portrait card slot (0.667)
-                    child: CardWidget(
-                      card: def,
-                      canPlay: canPlay && canAffordCard,
-                      onTap: canPlay ? () => controller.playCard(index) : null,
+                  child: GestureDetector(
+                    onTap: canPlay ? () {
+                      setState(() {
+                        _selectedCardIndex = isSelected ? null : index;
+                      });
+                    } : null,
+                    child: Transform.translate(
+                      offset: isSelected ? const Offset(0, -8) : Offset.zero,
+                      child: AspectRatio(
+                        aspectRatio: 2 / 3, // Portrait card slot (0.667)
+                        child: CardWidget(
+                          card: def,
+                          canPlay: canPlay && canAffordCard,
+                          onTap: null, // Selection handled by GestureDetector above
+                        ),
+                      ),
                     ),
                   ),
                 ),
@@ -452,56 +471,96 @@ class BattleScreen extends StatelessWidget {
   Widget _buildActions(
       BuildContext context, GameController controller, GameState state) {
     final canAct = state.phase == Phase.player && !controller.isAiThinking;
+    final hasSelection = _selectedCardIndex != null;
+    final canPlaySelected = hasSelection && 
+        canAct && 
+        _selectedCardIndex! < state.attacker.hand.length;
 
-    return Row(
+    return Column(
+      mainAxisSize: MainAxisSize.min,
       children: [
-        Expanded(
-          child: ElevatedButton(
-            onPressed: canAct && state.attacker.hand.isNotEmpty
-                ? () => _showDiscardDialog(context, controller, state)
-                : null,
-            style: ElevatedButton.styleFrom(
-              backgroundColor: SiegeTheme.panel,
-              foregroundColor: SiegeTheme.ink,
-              disabledBackgroundColor: SiegeTheme.panel2,
-              padding: const EdgeInsets.symmetric(vertical: 11),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(10),
-                side: BorderSide(color: SiegeTheme.line),
+        // Primary actions: Play (warm) + Discard (cool)
+        Row(
+          children: [
+            // Discard (cool teal/steel)
+            Expanded(
+              child: ElevatedButton(
+                onPressed: hasSelection && canAct
+                    ? () {
+                        controller.discardCard(_selectedCardIndex!);
+                        setState(() => _selectedCardIndex = null);
+                      }
+                    : (canAct && state.attacker.hand.isNotEmpty
+                        ? () => _showDiscardDialog(context, controller, state)
+                        : null),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: SiegeTheme.defender,
+                  foregroundColor: SiegeTheme.ink,
+                  disabledBackgroundColor: SiegeTheme.panel2,
+                  padding: const EdgeInsets.symmetric(vertical: 12),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                ),
+                child: Text(
+                  'DISCARD',
+                  style: TextStyle(
+                    fontFamily: 'Oswald',
+                    fontSize: 13,
+                    fontWeight: FontWeight.w600,
+                    letterSpacing: 0.52,
+                  ),
+                ),
               ),
             ),
-            child: Text(
-              'DISCARD',
-              style: TextStyle(
-                fontFamily: 'Oswald',
-                fontSize: 13,
-                fontWeight: FontWeight.w600,
-                letterSpacing: 0.52,
+            const SizedBox(width: 8),
+            // Play (warm amber - primary CTA)
+            Expanded(
+              flex: 2,
+              child: ElevatedButton(
+                onPressed: canPlaySelected
+                    ? () {
+                        controller.playCard(_selectedCardIndex!);
+                        setState(() => _selectedCardIndex = null);
+                      }
+                    : null,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: SiegeTheme.attacker,
+                  foregroundColor: SiegeTheme.background,
+                  disabledBackgroundColor: SiegeTheme.panel2,
+                  disabledForegroundColor: SiegeTheme.muted,
+                  padding: const EdgeInsets.symmetric(vertical: 12),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  elevation: canPlaySelected ? 4 : 0,
+                ),
+                child: Text(
+                  'PLAY',
+                  style: TextStyle(
+                    fontFamily: 'Oswald',
+                    fontSize: 15,
+                    fontWeight: FontWeight.w700,
+                    letterSpacing: 0.75,
+                  ),
+                ),
               ),
             ),
-          ),
+          ],
         ),
-        const SizedBox(width: 8),
-        Expanded(
-          child: ElevatedButton(
-            onPressed: () => _handleRetreat(context, controller),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: SiegeTheme.panel,
-              foregroundColor: SiegeTheme.ink,
-              padding: const EdgeInsets.symmetric(vertical: 11),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(10),
-                side: BorderSide(color: SiegeTheme.line),
-              ),
-            ),
-            child: Text(
-              'RETREAT',
-              style: TextStyle(
-                fontFamily: 'Oswald',
-                fontSize: 13,
-                fontWeight: FontWeight.w600,
-                letterSpacing: 0.52,
-              ),
+        // Secondary: Retreat (text button, tucked)
+        TextButton(
+          onPressed: () => _handleRetreat(context, controller),
+          style: TextButton.styleFrom(
+            foregroundColor: SiegeTheme.muted,
+            padding: const EdgeInsets.symmetric(vertical: 6),
+          ),
+          child: Text(
+            'Retreat',
+            style: TextStyle(
+              fontFamily: 'Inter',
+              fontSize: 12,
+              decoration: TextDecoration.underline,
             ),
           ),
         ),
