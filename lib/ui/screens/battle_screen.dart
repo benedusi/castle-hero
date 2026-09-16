@@ -409,17 +409,37 @@ class BattleScreen extends StatelessWidget {
                   padding: EdgeInsets.only(
                     right: index < 2 ? 8.0 : 0,
                   ),
-                  child: CardWidget(
-                    card: def,
-                    canPlay: canPlay && canAffordCard,
-                    onTap: canPlay ? () => controller.playCard(index) : null,
+                  // Fixed aspect ratio slot - all cards equal size
+                  child: AspectRatio(
+                    aspectRatio: 2 / 3, // Portrait card slot (0.667)
+                    child: CardWidget(
+                      card: def,
+                      canPlay: canPlay && canAffordCard,
+                      onTap: canPlay ? () => controller.playCard(index) : null,
+                    ),
                   ),
                 ),
               );
             } else {
+              // Empty slot - same fixed aspect ratio footprint
               return Expanded(
-                child: Container(
-                  margin: EdgeInsets.only(right: index < 2 ? 8.0 : 0),
+                child: Padding(
+                  padding: EdgeInsets.only(
+                    right: index < 2 ? 8.0 : 0,
+                  ),
+                  child: AspectRatio(
+                    aspectRatio: 2 / 3,
+                    child: Container(
+                      decoration: BoxDecoration(
+                        color: SiegeTheme.background.withOpacity(0.3),
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border.all(
+                          color: SiegeTheme.line.withOpacity(0.2),
+                          width: 1,
+                        ),
+                      ),
+                    ),
+                  ),
                 ),
               );
             }
