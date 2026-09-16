@@ -57,54 +57,118 @@ class BattleScreen extends StatelessWidget {
 
     return Stack(
       children: [
-        // Full scene battle plate background
+        // Full scene battle plate background (~70%+ of screen)
         Positioned.fill(
           child: Image.asset(
             backgroundAsset,
             fit: BoxFit.cover,
+            alignment: Alignment.center,
           ),
         ),
-        // Dark gradient for readability
-        Positioned.fill(
+        // Subtle gradient at bottom for chrome readability
+        Positioned(
+          left: 0,
+          right: 0,
+          bottom: 0,
+          height: 350,
           child: Container(
             decoration: BoxDecoration(
               gradient: LinearGradient(
                 begin: Alignment.topCenter,
                 end: Alignment.bottomCenter,
                 colors: [
-                  Colors.black.withOpacity(0.3),
-                  Colors.black.withOpacity(0.6),
+                  Colors.transparent,
+                  Colors.black.withOpacity(0.7),
                 ],
-                stops: const [0.0, 1.0],
               ),
             ),
           ),
         ),
-        // Battle UI overlay
-        SingleChildScrollView(
-          child: Padding(
-            padding: const EdgeInsets.all(14.0),
-            child: Column(
-              children: [
-                _buildHeader(state),
-                const SizedBox(height: 12),
-                _buildHealthBars(state),
-                const SizedBox(height: 220), // Space for the middle battlefield art
-                BattleLog(log: state.log),
-                const SizedBox(height: 12),
-                ResourceDisplay(
-                  stone: state.attacker.stone,
-                  food: state.attacker.food,
-                  gold: state.attacker.gold,
-                ),
-                const SizedBox(height: 10),
-                _buildHandHeader(state),
-                const SizedBox(height: 8),
-                _buildHand(controller, state),
-                const SizedBox(height: 12),
-                _buildActions(context, controller, state),
-                _buildHint(controller, state),
-              ],
+        // Header and day label (top safe area)
+        Positioned(
+          top: 0,
+          left: 0,
+          right: 0,
+          child: SafeArea(
+            bottom: false,
+            child: Padding(
+              padding: const EdgeInsets.all(14.0),
+              child: _buildHeader(state),
+            ),
+          ),
+        ),
+        // HP bars positioned L/R over battlefield assets
+        Positioned(
+          top: 60,
+          left: 0,
+          right: 0,
+          child: SafeArea(
+            bottom: false,
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 14.0),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Catapult HP (LEFT, warm)
+                  Expanded(
+                    child: _buildSingleHealthBar(
+                      label: 'Catapult',
+                      current: state.attacker.catapult,
+                      max: state.catapultMax,
+                      isDefender: false,
+                      fire: state.catapultFire,
+                      infantry: state.infantry,
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  // Wall/Gate HP (RIGHT, cool)
+                  Expanded(
+                    child: _buildSingleHealthBar(
+                      label: 'Wall & Gate',
+                      current: state.defender.wall,
+                      max: state.wallMax,
+                      isDefender: true,
+                      fire: state.gateFire,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+        // Bottom chrome bar: log → resources → hand → actions
+        Positioned(
+          left: 0,
+          right: 0,
+          bottom: 0,
+          child: SafeArea(
+            top: false,
+            child: Padding(
+              padding: const EdgeInsets.all(14.0),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  // Battle log (1-2 lines)
+                  BattleLog(log: state.log),
+                  const SizedBox(height: 10),
+                  // Resources (stone/food/gold fixed order)
+                  ResourceDisplay(
+                    stone: state.attacker.stone,
+                    food: state.attacker.food,
+                    gold: state.attacker.gold,
+                  ),
+                  const SizedBox(height: 10),
+                  // Hand header
+                  _buildHandHeader(state),
+                  const SizedBox(height: 6),
+                  // Hand of 3
+                  _buildHand(controller, state),
+                  const SizedBox(height: 10),
+                  // Play / Discard (thumb zone)
+                  _buildActions(context, controller, state),
+                  _buildHint(controller, state),
+                ],
+              ),
             ),
           ),
         ),
@@ -139,31 +203,148 @@ class BattleScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildHealthBars(GameState state) {
+  Widget _buildSingleHealthBar({
+    required String label,
+    required int current,
+    required int max,
+    required bool isDefender,
+    List<int> fire = const [],
+    int? infantry,
+  }) {
+    final percentage = (current / max).clamp(0.0, 1.0);
+    final isLow = percentage <= 0.25;
+    final color = isDefender ? SiegeTheme.defender : SiegeTheme.attacker;
+    final dimColor = isDefender ? SiegeTheme.defenderDim : SiegeTheme.attackerDim;
+
     return Container(
-      padding: const EdgeInsets.all(14.0),
+      padding: const EdgeInsets.all(10.0),
       decoration: BoxDecoration(
         color: SiegeTheme.panel.withOpacity(0.85),
-        border: Border.all(color: SiegeTheme.line),
-        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: isDefender ? SiegeTheme.defender.withOpacity(0.5) : SiegeTheme.attacker.withOpacity(0.5),
+          width: 1.5,
+        ),
+        borderRadius: BorderRadius.circular(10),
       ),
       child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          HealthBar(
-            label: 'The castle — wall & gate',
-            current: state.defender.wall,
-            max: state.wallMax,
-            isDefender: true,
-            fire: state.gateFire,
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                label.toUpperCase(),
+                style: TextStyle(
+                  fontFamily: 'Oswald',
+                  fontSize: 11,
+                  fontWeight: FontWeight.w600,
+                  letterSpacing: 0.44,
+                  color: SiegeTheme.muted,
+                ),
+              ),
+              Row(
+                children: [
+                  Text(
+                    '$current',
+                    style: TextStyle(
+                      fontFamily: 'Oswald',
+                      fontSize: 20,
+                      fontWeight: FontWeight.w700,
+                      color: isLow ? SiegeTheme.danger : color,
+                      height: 1.0,
+                    ),
+                  ),
+                  Text(
+                    '/$max',
+                    style: TextStyle(
+                      fontFamily: 'Oswald',
+                      fontSize: 11,
+                      fontWeight: FontWeight.w400,
+                      color: SiegeTheme.muted,
+                    ),
+                  ),
+                ],
+              ),
+            ],
           ),
-          const SizedBox(height: 12),
-          HealthBar(
-            label: 'Your siege — catapult',
-            current: state.attacker.catapult,
-            max: state.catapultMax,
-            isDefender: false,
-            fire: state.catapultFire,
-            infantry: state.infantry,
+          const SizedBox(height: 4),
+          // HP bar
+          Container(
+            height: 12,
+            decoration: BoxDecoration(
+              color: SiegeTheme.background,
+              borderRadius: BorderRadius.circular(6),
+            ),
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(6),
+              child: FractionallySizedBox(
+                alignment: Alignment.centerLeft,
+                widthFactor: percentage,
+                child: Container(
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      colors: [dimColor, color],
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ),
+          // Status indicators
+          if (fire.isNotEmpty || (infantry != null && infantry > 0))
+            Padding(
+              padding: const EdgeInsets.only(top: 6.0),
+              child: Wrap(
+                spacing: 6,
+                runSpacing: 4,
+                children: [
+                  if (fire.isNotEmpty)
+                    _buildCompactStatus(
+                      'assets/art/ui/status_fire.png',
+                      fire.join('·'),
+                      SiegeTheme.danger,
+                    ),
+                  if (infantry != null && infantry > 0)
+                    _buildCompactStatus(
+                      'assets/art/ui/status_infantry.png',
+                      '×$infantry',
+                      SiegeTheme.attacker,
+                    ),
+                ],
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildCompactStatus(String assetPath, String text, Color color) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+      decoration: BoxDecoration(
+        color: SiegeTheme.background.withOpacity(0.7),
+        border: Border.all(color: color.withOpacity(0.5), width: 1),
+        borderRadius: BorderRadius.circular(6),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Image.asset(
+            assetPath,
+            width: 14,
+            height: 14,
+            fit: BoxFit.contain,
+          ),
+          const SizedBox(width: 3),
+          Text(
+            text,
+            style: TextStyle(
+              fontFamily: 'Oswald',
+              fontSize: 11,
+              fontWeight: FontWeight.w700,
+              color: color,
+            ),
           ),
         ],
       ),
@@ -201,7 +382,7 @@ class BattleScreen extends StatelessWidget {
     final canPlay = state.phase == Phase.player && !controller.isAiThinking;
 
     return SizedBox(
-      height: 140,
+      height: 160, // Taller for proper card aspect ratio
       child: Row(
         children: List.generate(
           3,
