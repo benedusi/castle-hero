@@ -49,7 +49,7 @@ class BattleScreen extends StatelessWidget {
       BuildContext context, GameController controller, GameState state) {
     // Choose background based on game state
     String backgroundAsset = 'assets/art/backgrounds/composite-battle-empty.jpg';
-    if (state.gateFire > 0) {
+    if (state.gateFire.isNotEmpty) {
       backgroundAsset = 'assets/art/backgrounds/composite-battle-fire.jpg';
     } else if (state.turn > 3) {
       backgroundAsset = 'assets/art/backgrounds/composite-battle-midfight.jpg';
