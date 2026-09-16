@@ -15,20 +15,20 @@ class CardWidget extends StatelessWidget {
   });
 
   String _getCardAssetPath() {
-    // Map card enum to asset path
+    // Map card enum to production asset path
     switch (card.card) {
       case AttackerCard.fire:
-        return 'assets/art/cards/fire.png';
+        return 'assets/art/production/cards/card-fire.png';
       case AttackerCard.volley:
-        return 'assets/art/cards/volley.png';
+        return 'assets/art/production/cards/card-volley.png';
       case AttackerCard.infantry:
-        return 'assets/art/cards/infantry.png';
+        return 'assets/art/production/cards/card-infantry.png';
       case AttackerCard.fireball:
-        return 'assets/art/cards/fireball.png';
+        return 'assets/art/production/cards/card-fireball.png';
       case AttackerCard.mercenaries:
-        return 'assets/art/cards/mercenaries.png';
+        return 'assets/art/production/cards/card-mercenaries.png';
       case AttackerCard.cleanse:
-        return 'assets/art/cards/cleanse.png';
+        return 'assets/art/production/cards/card-cleanse-attacker.png';
     }
   }
 
@@ -58,20 +58,26 @@ class CardWidget extends StatelessWidget {
           ),
           child: ClipRRect(
             borderRadius: BorderRadius.circular(7),
-            child: Stack(
-              fit: StackFit.expand,
-              children: [
-                // Card art image
-                Image.asset(
-                  _getCardAssetPath(),
-                  fit: BoxFit.cover,
-                ),
-                // Unaffordable overlay
-                if (!canPlay)
-                  Container(
-                    color: Colors.black.withOpacity(0.5),
+            child: Container(
+              color: SiegeTheme.background,
+              child: Stack(
+                fit: StackFit.expand,
+                children: [
+                  // Card art image - use contain for varying card sizes
+                  Padding(
+                    padding: const EdgeInsets.all(2.0),
+                    child: Image.asset(
+                      _getCardAssetPath(),
+                      fit: BoxFit.contain, // Contain, not cover - cards have varying sizes
+                    ),
                   ),
-              ],
+                  // Unaffordable overlay
+                  if (!canPlay)
+                    Container(
+                      color: Colors.black.withOpacity(0.5),
+                    ),
+                ],
+              ),
             ),
           ),
         ),

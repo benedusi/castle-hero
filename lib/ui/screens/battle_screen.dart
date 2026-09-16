@@ -47,17 +47,16 @@ class BattleScreen extends StatelessWidget {
 
   Widget _buildBattleContent(
       BuildContext context, GameController controller, GameState state) {
-    // Choose background based on game state
-    String backgroundAsset = 'assets/art/backgrounds/composite-battle-empty.jpg';
-    if (state.gateFire.isNotEmpty) {
-      backgroundAsset = 'assets/art/backgrounds/composite-battle-fire.jpg';
-    } else if (state.turn > 3) {
-      backgroundAsset = 'assets/art/backgrounds/composite-battle-midfight.jpg';
+    // Choose background based on game state - using production 9:16 plates
+    String backgroundAsset = 'assets/art/production/plates/stage-calm-9x16.png';
+    if (state.gateFire.isNotEmpty || state.turn > 5) {
+      // Use pressure plate for fire or later turns (dedicated fire plate coming in batch 2)
+      backgroundAsset = 'assets/art/production/plates/stage-pressure-9x16.png';
     }
 
     return Stack(
       children: [
-        // Full scene battle plate background (~70%+ of screen)
+        // Full-bleed 9:16 battle plate background
         Positioned.fill(
           child: Image.asset(
             backgroundAsset,
