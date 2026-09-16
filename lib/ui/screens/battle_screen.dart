@@ -319,6 +319,14 @@ class BattleScreen extends StatelessWidget {
   }
 
   Widget _buildCompactStatus(String assetPath, String text, Color color) {
+    // Use production badges - prefer showing live Flutter numbers over baked pill text
+    String badgeAsset = assetPath;
+    if (assetPath.contains('status_fire')) {
+      badgeAsset = 'assets/art/production/badges/badge-fire.png';
+    } else if (assetPath.contains('status_infantry')) {
+      badgeAsset = 'assets/art/production/badges/badge-infantry.png';
+    }
+    
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
       decoration: BoxDecoration(
@@ -330,7 +338,7 @@ class BattleScreen extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         children: [
           Image.asset(
-            assetPath,
+            badgeAsset,
             width: 14,
             height: 14,
             fit: BoxFit.contain,

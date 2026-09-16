@@ -30,13 +30,13 @@ class ResourceDisplay extends StatelessWidget {
     String assetPath;
     switch (label) {
       case 'stone':
-        assetPath = 'assets/art/ui/resource_stone.png';
+        assetPath = 'assets/art/production/icons/icon-stone.png';
         break;
       case 'food':
-        assetPath = 'assets/art/ui/resource_food.png';
+        assetPath = 'assets/art/production/icons/icon-food.png';
         break;
       case 'gold':
-        assetPath = 'assets/art/ui/resource_gold.png';
+        assetPath = 'assets/art/production/icons/icon-gold.png';
         break;
       default:
         assetPath = '';

@@ -163,23 +163,23 @@ class _CampaignNode extends StatelessWidget {
   }
 
   Widget _buildBadge(bool isCompleted, bool isCurrent, bool isLocked) {
-    // Choose node state icon
+    // Choose production node state asset
     String assetPath;
     if (isCompleted) {
-      assetPath = 'assets/art/campaign/node_conquered.png';
+      assetPath = 'assets/art/production/nodes/node-conquered.png';
     } else if (isLast) {
-      assetPath = 'assets/art/campaign/node_crown.png';
+      assetPath = 'assets/art/production/nodes/node-throne.png';
     } else if (isCurrent) {
-      assetPath = 'assets/art/campaign/node_current.png';
+      assetPath = 'assets/art/production/nodes/node-current.png';
     } else {
-      assetPath = 'assets/art/campaign/node_locked.png';
+      assetPath = 'assets/art/production/nodes/node-locked.png';
     }
 
     return Container(
-      width: 64,
-      height: 64,
+      width: 80,
+      height: 80,
       decoration: BoxDecoration(
-        shape: BoxShape.circle,
+        borderRadius: BorderRadius.circular(12),
         boxShadow: isCurrent
             ? [
                 BoxShadow(
@@ -190,10 +190,11 @@ class _CampaignNode extends StatelessWidget {
               ]
             : null,
       ),
-      child: ClipOval(
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(12),
         child: Image.asset(
           assetPath,
-          fit: BoxFit.cover,
+          fit: BoxFit.contain,
         ),
       ),
     );
