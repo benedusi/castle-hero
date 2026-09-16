@@ -16,12 +16,11 @@ class CampaignMapScreen extends StatelessWidget {
           builder: (context, controller, _) {
             return Stack(
               children: [
-                // TODO: Replace with clean 9:16 campaign map plate when Art delivers
-                // assets/art/production/plates/campaign-map-9x16.png
-                // Interim: solid night background to avoid ghosting with old baked-label map
+                // Clean campaign map 9:16 plate (no nodes/labels/chrome)
                 Positioned.fill(
-                  child: Container(
-                    color: SiegeTheme.background, // #0B1020 night base
+                  child: Image.asset(
+                    'assets/art/production/plates/campaign-map-9x16.png',
+                    fit: BoxFit.cover,
                   ),
                 ),
                 // Campaign path composition in Flutter
@@ -36,7 +35,17 @@ class CampaignMapScreen extends StatelessWidget {
 
   Widget _buildCampaignPath(BuildContext context, GameController controller) {
     final nodes = controller.campaign.nodes;
-    final screenHeight = MediaQuery.of(context).size.height;
+    final size = MediaQuery.of(context).size;
+    
+    // Node positions based on campaign-layout-ref.png
+    // Nodes are positioned along the path from bottom to top
+    final nodePositions = [
+      {'top': 0.82, 'left': 0.50}, // Node 0: The Outpost (bottom)
+      {'top': 0.67, 'left': 0.50}, // Node 1: The Keep
+      {'top': 0.52, 'left': 0.50}, // Node 2: The Citadel
+      {'top': 0.37, 'left': 0.50}, // Node 3: The Bastion
+      {'top': 0.15, 'left': 0.50}, // Node 4: The Fortress/Throne (top)
+    ];
     
     return Stack(
       children: [
@@ -47,23 +56,18 @@ class CampaignMapScreen extends StatelessWidget {
           right: 16,
           child: _buildHeader(controller),
         ),
-        // 5 campaign nodes positioned vertically along center path
+        // Position 5 campaign nodes using layout ref coordinates
         ...nodes.asMap().entries.map((entry) {
           final index = entry.key;
           final node = entry.value;
           final isLast = index == nodes.length - 1;
-          
-          // Position nodes vertically from top to bottom with spacing
-          // Reserve top ~100px for header, bottom ~100px for margin
-          final availableHeight = screenHeight - 200;
-          final spacing = availableHeight / (nodes.length + 1);
-          final topPosition = 120 + (spacing * (index + 1));
+          final pos = nodePositions[index];
           
           return Positioned(
-            top: topPosition,
-            left: 0,
-            right: 0,
-            child: Center(
+            top: size.height * pos['top']!,
+            left: size.width * pos['left']!,
+            child: Transform.translate(
+              offset: const Offset(-60, -60), // Center the 120px node
               child: _CampaignNode(
                 node: node,
                 isLast: isLast,
@@ -152,23 +156,48 @@ class _CampaignNode extends StatelessWidget {
     final isCurrent = node.status == NodeStatus.current;
     final isLocked = node.status == NodeStatus.locked;
 
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 24.0),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
+    return Container(
+      width: 280,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
         children: [
+          // Production node badge (labels baked in)
           _buildBadge(isCompleted, isCurrent, isLocked),
-          const SizedBox(width: 16),
-          Expanded(
-            child: _buildInfo(context, isCompleted, isCurrent, isLocked),
-          ),
+          // Only show attack button for current node
+          if (isCurrent) ...[
+            const SizedBox(height: 12),
+            SizedBox(
+              width: 180,
+              child: ElevatedButton(
+                onPressed: onTap,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: SiegeTheme.attacker,
+                  foregroundColor: SiegeTheme.background,
+                  padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  elevation: 4,
+                ),
+                child: Text(
+                  'ATTACK',
+                  style: TextStyle(
+                    fontFamily: 'Oswald',
+                    fontSize: 15,
+                    fontWeight: FontWeight.w700,
+                    letterSpacing: 0.75,
+                  ),
+                ),
+              ),
+            ),
+          ],
         ],
       ),
     );
   }
 
   Widget _buildBadge(bool isCompleted, bool isCurrent, bool isLocked) {
-    // Choose production node state asset
+    // Choose production node state asset (labels baked in)
     String assetPath;
     if (isCompleted) {
       assetPath = 'assets/art/production/nodes/node-conquered.png';
@@ -181,85 +210,37 @@ class _CampaignNode extends StatelessWidget {
     }
 
     return Container(
-      width: 80,
-      height: 80,
+      width: 120,
+      height: 120,
       decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(16),
         boxShadow: isCurrent
             ? [
                 BoxShadow(
-                  color: SiegeTheme.attacker.withOpacity(0.4),
-                  blurRadius: 12,
-                  spreadRadius: 2,
+                  color: SiegeTheme.attacker.withOpacity(0.5),
+                  blurRadius: 16,
+                  spreadRadius: 3,
                 )
               ]
             : null,
       ),
       child: ClipRRect(
-        borderRadius: BorderRadius.circular(12),
-        child: Image.asset(
-          assetPath,
-          fit: BoxFit.contain,
+        borderRadius: BorderRadius.circular(16),
+        child: ColorFiltered(
+          colorFilter: isLocked
+              ? ColorFilter.mode(
+                  Colors.black.withOpacity(0.5),
+                  BlendMode.darken,
+                )
+              : const ColorFilter.mode(
+                  Colors.transparent,
+                  BlendMode.multiply,
+                ),
+          child: Image.asset(
+            assetPath,
+            fit: BoxFit.contain,
+          ),
         ),
-      ),
-    );
-  }
-
-  Widget _buildInfo(
-      BuildContext context, bool isCompleted, bool isCurrent, bool isLocked) {
-    return Opacity(
-      opacity: isLocked ? 0.5 : 1.0,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            node.tier.name,
-            style: TextStyle(
-              fontFamily: 'Oswald',
-              fontSize: 19,
-              fontWeight: FontWeight.w600,
-              letterSpacing: 0.38,
-              color: isLocked ? SiegeTheme.muted : SiegeTheme.ink,
-            ),
-          ),
-          const SizedBox(height: 4),
-          Text(
-            isCompleted
-                ? 'Conquered'
-                : isCurrent
-                    ? 'HP ${node.tier.hp} • Sight ${node.tier.aiConfig.sight}'
-                    : 'Locked',
-            style: TextStyle(
-              fontFamily: 'Inter',
-              fontSize: 13,
-              color: SiegeTheme.muted,
-            ),
-          ),
-          if (isCurrent) ...[
-            const SizedBox(height: 12),
-            ElevatedButton(
-              onPressed: onTap,
-              style: ElevatedButton.styleFrom(
-                backgroundColor: SiegeTheme.attacker,
-                foregroundColor: const Color(0xFF1a1109),
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 18, vertical: 9),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(9),
-                ),
-              ),
-              child: Text(
-                'LAY SIEGE',
-                style: TextStyle(
-                  fontFamily: 'Oswald',
-                  fontSize: 13,
-                  fontWeight: FontWeight.w600,
-                  letterSpacing: 0.52,
-                ),
-              ),
-            ),
-          ],
-        ],
       ),
     );
   }
