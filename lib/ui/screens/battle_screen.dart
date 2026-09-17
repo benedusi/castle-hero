@@ -113,7 +113,7 @@ class _BattleScreenState extends State<BattleScreen> {
             child: Padding(
               padding: const EdgeInsets.symmetric(horizontal: 14.0),
               child: Container(
-                height: 68,
+                height: 48,
                 decoration: BoxDecoration(
                   // Use production chrome frame as actual panel
                   image: const DecorationImage(
@@ -129,7 +129,7 @@ class _BattleScreenState extends State<BattleScreen> {
                   ],
                 ),
                 child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 10.0),
+                  padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 8.0),
                   child: Row(
                     children: [
                       // Catapult side (LEFT, warm)
@@ -146,7 +146,7 @@ class _BattleScreenState extends State<BattleScreen> {
                       // Divider between sides
                       Container(
                         width: 2,
-                        margin: const EdgeInsets.symmetric(vertical: 6),
+                        margin: const EdgeInsets.symmetric(vertical: 4),
                         decoration: BoxDecoration(
                           gradient: LinearGradient(
                             begin: Alignment.topCenter,
@@ -257,23 +257,23 @@ class _BattleScreenState extends State<BattleScreen> {
     final dimColor = isDefender ? SiegeTheme.defenderDim : SiegeTheme.attackerDim;
 
     // Mock §03 target slot order: [icon][HP fill + readable text][fire medallion][infantry tags...]
+    // Compact sizing for ~390px phones - badges in end slots
     return Row(
       children: [
-        // 1. Framed icon (no ColorFilter)
-        Container(
-          width: 40,
-          height: 48,
-          padding: const EdgeInsets.all(4),
+        // 1. Framed icon (no ColorFilter) - compact 32×32 for narrow widths
+        SizedBox(
+          width: 32,
+          height: 32,
           child: Image.asset(
             iconAsset,
             fit: BoxFit.contain,
           ),
         ),
-        const SizedBox(width: 6),
-        // 2. HP bar with trough chrome + centered text (Expanded to fill available space)
+        const SizedBox(width: 4),
+        // 2. HP bar with trough chrome + centered text (Expanded to fill REMAINING space)
         Expanded(
           child: Container(
-            height: 48,
+            height: 32,
             decoration: BoxDecoration(
               // Use production trough chrome as background
               image: const DecorationImage(
@@ -285,7 +285,7 @@ class _BattleScreenState extends State<BattleScreen> {
               children: [
                 // HP fill gradient
                 Padding(
-                  padding: const EdgeInsets.all(4.0),
+                  padding: const EdgeInsets.all(3.0),
                   child: FractionallySizedBox(
                     alignment: Alignment.centerLeft,
                     widthFactor: percentage,
@@ -294,7 +294,7 @@ class _BattleScreenState extends State<BattleScreen> {
                         gradient: LinearGradient(
                           colors: [dimColor, color],
                         ),
-                        borderRadius: BorderRadius.circular(4),
+                        borderRadius: BorderRadius.circular(3),
                       ),
                     ),
                   ),
@@ -308,13 +308,13 @@ class _BattleScreenState extends State<BattleScreen> {
                         '$current',
                         style: TextStyle(
                           fontFamily: 'Oswald',
-                          fontSize: 22,
+                          fontSize: 16,
                           fontWeight: FontWeight.w700,
                           color: Colors.white,
                           shadows: [
                             Shadow(
                               color: Colors.black.withOpacity(0.9),
-                              blurRadius: 4,
+                              blurRadius: 3,
                               offset: const Offset(0, 1),
                             ),
                           ],
@@ -324,13 +324,13 @@ class _BattleScreenState extends State<BattleScreen> {
                         ' / ',
                         style: TextStyle(
                           fontFamily: 'Oswald',
-                          fontSize: 16,
+                          fontSize: 12,
                           fontWeight: FontWeight.w400,
                           color: Colors.white.withOpacity(0.9),
                           shadows: [
                             Shadow(
                               color: Colors.black.withOpacity(0.9),
-                              blurRadius: 4,
+                              blurRadius: 3,
                               offset: const Offset(0, 1),
                             ),
                           ],
@@ -340,13 +340,13 @@ class _BattleScreenState extends State<BattleScreen> {
                         '$max',
                         style: TextStyle(
                           fontFamily: 'Oswald',
-                          fontSize: 18,
+                          fontSize: 14,
                           fontWeight: FontWeight.w500,
                           color: Colors.white.withOpacity(0.9),
                           shadows: [
                             Shadow(
                               color: Colors.black.withOpacity(0.9),
-                              blurRadius: 4,
+                              blurRadius: 3,
                               offset: const Offset(0, 1),
                             ),
                           ],
@@ -359,71 +359,74 @@ class _BattleScreenState extends State<BattleScreen> {
             ),
           ),
         ),
-        const SizedBox(width: 6),
-        // 3. Fire medallion + DoT countdown beside it (reserved end slot)
+        const SizedBox(width: 3),
+        // 3. Fire medallion + DoT countdown beside it (compact fixed-size end slot)
         if (fire.isNotEmpty) ...[
-          // Flame medallion only (badge-fire tip)
+          // Flame medallion only (badge-fire tip) - compact 24×32
           SizedBox(
-            width: 36,
-            height: 48,
+            width: 24,
+            height: 32,
             child: Image.asset(
               'assets/art/production/badges/badge-fire.png',
               fit: BoxFit.contain,
             ),
           ),
-          const SizedBox(width: 2),
-          // DoT countdown beside medallion (small, not on face)
+          const SizedBox(width: 1),
+          // DoT countdown: FIRST TICK ONLY (not full 3→2→1 chain) - compact
           Container(
-            padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+            width: 16,
+            height: 16,
             decoration: BoxDecoration(
-              color: Colors.black.withOpacity(0.6),
-              borderRadius: BorderRadius.circular(4),
+              color: Colors.black.withOpacity(0.7),
+              shape: BoxShape.circle,
               border: Border.all(
-                color: SiegeTheme.danger.withOpacity(0.8),
+                color: SiegeTheme.danger.withOpacity(0.9),
                 width: 1,
               ),
             ),
-            child: Text(
-              fire.join('→'),
-              style: TextStyle(
-                fontFamily: 'Oswald',
-                fontSize: 10,
-                fontWeight: FontWeight.w700,
-                color: SiegeTheme.danger,
-                height: 1.0,
+            child: Center(
+              child: Text(
+                '${fire.first}',
+                style: TextStyle(
+                  fontFamily: 'Oswald',
+                  fontSize: 10,
+                  fontWeight: FontWeight.w700,
+                  color: SiegeTheme.danger,
+                  height: 1.0,
+                ),
               ),
             ),
           ),
-          const SizedBox(width: 4),
+          const SizedBox(width: 2),
         ],
-        // 4. Infantry tags (wall only) - stack helmet+×N past fire badge
+        // 4. Infantry tags (wall only) - compact helmet+×N past fire badge
         if (infantry != null && infantry > 0) ...[
-          // Helmet badge
+          // Helmet badge - compact 20×20
           SizedBox(
-            width: 28,
-            height: 28,
+            width: 20,
+            height: 20,
             child: Image.asset(
               'assets/art/production/badges/badge-infantry.png',
               fit: BoxFit.contain,
             ),
           ),
-          const SizedBox(width: 2),
-          // ×N tag with live Flutter text
+          const SizedBox(width: 1),
+          // ×N tag with live Flutter text - compact pill
           Container(
-            padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 3),
+            padding: const EdgeInsets.symmetric(horizontal: 3, vertical: 1),
             decoration: BoxDecoration(
               color: Colors.black.withOpacity(0.7),
-              borderRadius: BorderRadius.circular(4),
+              borderRadius: BorderRadius.circular(3),
               border: Border.all(
                 color: SiegeTheme.attacker.withOpacity(0.9),
-                width: 1.5,
+                width: 1,
               ),
             ),
             child: Text(
               '×$infantry',
               style: TextStyle(
                 fontFamily: 'Oswald',
-                fontSize: 11,
+                fontSize: 9,
                 fontWeight: FontWeight.w700,
                 color: SiegeTheme.attacker,
                 height: 1.0,
