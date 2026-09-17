@@ -256,7 +256,7 @@ class _BattleScreenState extends State<BattleScreen> {
               width: 28,
               height: 28,
               fit: BoxFit.contain,
-              color: color.withOpacity(0.8),
+              // NO color tint - draw as-authored with alpha
             ),
           ),
         ),
@@ -373,11 +373,7 @@ class _BattleScreenState extends State<BattleScreen> {
                         mainAxisSize: MainAxisSize.min,
                         children: [
                           if (fire.isNotEmpty)
-                            _buildBarBadge(
-                              'assets/art/production/badges/badge-fire.png',
-                              fire.join('→'),
-                              SiegeTheme.danger,
-                            ),
+                            _buildFireBadge(fire),
                           if (fire.isNotEmpty && infantry != null && infantry > 0)
                             const SizedBox(width: 6),
                           if (infantry != null && infantry > 0)
@@ -421,7 +417,7 @@ class _BattleScreenState extends State<BattleScreen> {
   }
 
   Widget _buildBarBadge(String badgeAsset, String text, Color color) {
-    // Badge that sits ON the HP bar
+    // Badge that sits ON the HP bar (infantry, etc.)
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
       decoration: BoxDecoration(
@@ -444,6 +440,45 @@ class _BattleScreenState extends State<BattleScreen> {
           const SizedBox(width: 4),
           Text(
             text,
+            style: TextStyle(
+              fontFamily: 'Oswald',
+              fontSize: 12,
+              fontWeight: FontWeight.w700,
+              color: Colors.white,
+              height: 1.0,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildFireBadge(List<int> fire) {
+    // Fire DoT badge: digit-free pill chrome + live Flutter countdown
+    return Container(
+      height: 24,
+      padding: const EdgeInsets.only(left: 4, right: 8),
+      decoration: BoxDecoration(
+        color: Colors.black.withOpacity(0.7),
+        border: Border.all(
+          color: SiegeTheme.danger.withOpacity(0.8),
+          width: 1.5,
+        ),
+        borderRadius: BorderRadius.circular(6),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          // Digit-free pill chrome (flame icon on left)
+          Image.asset(
+            'assets/art/production/badges/pill-fire-turns.png',
+            height: 20,
+            fit: BoxFit.contain,
+          ),
+          const SizedBox(width: 4),
+          // Live Flutter countdown text in the empty right area
+          Text(
+            fire.join('→'),
             style: TextStyle(
               fontFamily: 'Oswald',
               fontSize: 12,
