@@ -233,21 +233,21 @@ class _BattleScreenState extends State<BattleScreen> {
 
     return Row(
       children: [
-        // HUD icon (catapult LEFT warm / wall RIGHT cool)
+        // HUD icon (catapult LEFT warm / wall RIGHT cool) - fixed small size
         Container(
-          width: 40,
-          height: 52,
+          width: 36,
+          height: 48,
           decoration: BoxDecoration(
             color: SiegeTheme.background,
             border: Border.all(
               color: SiegeTheme.line.withOpacity(0.6),
-              width: 2,
+              width: 1.5,
             ),
-            borderRadius: BorderRadius.circular(8),
+            borderRadius: BorderRadius.circular(6),
             boxShadow: [
               BoxShadow(
                 color: Colors.black.withOpacity(0.3),
-                blurRadius: 4,
+                blurRadius: 3,
                 offset: const Offset(0, 2),
               ),
             ],
@@ -255,36 +255,36 @@ class _BattleScreenState extends State<BattleScreen> {
           child: Center(
             child: Image.asset(
               iconAsset,
-              width: 28,
-              height: 28,
+              width: 24,
+              height: 24,
               fit: BoxFit.contain,
               // NO color tint - draw as-authored with alpha
             ),
           ),
         ),
-        const SizedBox(width: 6),
-        // HP strip
+        const SizedBox(width: 4),
+        // HP strip - MUST be Expanded to flex with available width
         Expanded(
           child: Container(
-            height: 52,
+            height: 48,
             decoration: BoxDecoration(
               // Beveled dark frame
               color: SiegeTheme.background,
               border: Border.all(
                 color: SiegeTheme.line.withOpacity(0.6),
-                width: 2,
+                width: 1.5,
               ),
-              borderRadius: BorderRadius.circular(8),
+              borderRadius: BorderRadius.circular(6),
               boxShadow: [
                 BoxShadow(
                   color: Colors.black.withOpacity(0.3),
-                  blurRadius: 4,
+                  blurRadius: 3,
                   offset: const Offset(0, 2),
                 ),
               ],
             ),
             child: ClipRRect(
-              borderRadius: BorderRadius.circular(6),
+              borderRadius: BorderRadius.circular(5),
               child: Stack(
                 children: [
                   // Background
@@ -317,7 +317,7 @@ class _BattleScreenState extends State<BattleScreen> {
                             '$current',
                             style: TextStyle(
                               fontFamily: 'Oswald',
-                              fontSize: 20,
+                              fontSize: 18,
                               fontWeight: FontWeight.w700,
                               color: Colors.white,
                               shadows: [
@@ -333,7 +333,7 @@ class _BattleScreenState extends State<BattleScreen> {
                             ' / ',
                             style: TextStyle(
                               fontFamily: 'Oswald',
-                              fontSize: 14,
+                              fontSize: 13,
                               fontWeight: FontWeight.w400,
                               color: Colors.white.withOpacity(0.7),
                               shadows: [
@@ -349,7 +349,7 @@ class _BattleScreenState extends State<BattleScreen> {
                             '$max',
                             style: TextStyle(
                               fontFamily: 'Oswald',
-                              fontSize: 16,
+                              fontSize: 15,
                               fontWeight: FontWeight.w500,
                               color: Colors.white.withOpacity(0.85),
                               shadows: [
@@ -367,15 +367,15 @@ class _BattleScreenState extends State<BattleScreen> {
                   ),
                   // Label (top-left corner, small)
                   Positioned(
-                    left: 8,
-                    top: 4,
+                    left: 6,
+                    top: 3,
                     child: Text(
                       label.toUpperCase(),
                       style: TextStyle(
                         fontFamily: 'Oswald',
-                        fontSize: 9,
+                        fontSize: 8,
                         fontWeight: FontWeight.w600,
-                        letterSpacing: 0.36,
+                        letterSpacing: 0.32,
                         color: Colors.white.withOpacity(0.6),
                         shadows: [
                           Shadow(
@@ -392,9 +392,9 @@ class _BattleScreenState extends State<BattleScreen> {
             ),
           ),
         ),
-        // Status badges to the RIGHT of the bar (outside fill, never cover text)
+        // Compact status badges to the RIGHT of the bar (never cover text, minimal width)
         if (hasBadges) ...[
-          const SizedBox(width: 6),
+          const SizedBox(width: 4),
           Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -402,7 +402,7 @@ class _BattleScreenState extends State<BattleScreen> {
               if (fire.isNotEmpty)
                 _buildCompactFireBadge(fire),
               if (fire.isNotEmpty && infantry != null && infantry > 0)
-                const SizedBox(height: 4),
+                const SizedBox(height: 3),
               if (infantry != null && infantry > 0)
                 _buildCompactInfantryBadge(infantry),
             ],
@@ -489,14 +489,14 @@ class _BattleScreenState extends State<BattleScreen> {
   }
 
   Widget _buildCompactFireBadge(List<int> fire) {
-    // Compact fire badge to the right of HP bar: circular badge + countdown
+    // Ultra-compact fire badge for narrow widths: small circular badge + short countdown
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
-        // Circular fire badge
+        // Circular fire badge (smaller for tight widths)
         Container(
-          width: 24,
-          height: 24,
+          width: 18,
+          height: 18,
           decoration: BoxDecoration(
             shape: BoxShape.circle,
             border: Border.all(
@@ -507,19 +507,19 @@ class _BattleScreenState extends State<BattleScreen> {
           child: Center(
             child: Image.asset(
               'assets/art/production/badges/badge-fire.png',
-              width: 20,
-              height: 20,
+              width: 14,
+              height: 14,
               fit: BoxFit.contain,
             ),
           ),
         ),
-        const SizedBox(width: 4),
-        // Live countdown text beside the badge
+        const SizedBox(width: 2),
+        // Live countdown text beside the badge (compact)
         Text(
           fire.join('→'),
           style: TextStyle(
             fontFamily: 'Oswald',
-            fontSize: 11,
+            fontSize: 10,
             fontWeight: FontWeight.w700,
             color: SiegeTheme.danger,
             shadows: [
@@ -536,14 +536,14 @@ class _BattleScreenState extends State<BattleScreen> {
   }
 
   Widget _buildCompactInfantryBadge(int infantry) {
-    // Compact infantry badge to the right of HP bar
+    // Ultra-compact infantry badge for narrow widths
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
-        // Circular infantry badge
+        // Circular infantry badge (smaller for tight widths)
         Container(
-          width: 24,
-          height: 24,
+          width: 18,
+          height: 18,
           decoration: BoxDecoration(
             shape: BoxShape.circle,
             border: Border.all(
@@ -554,19 +554,19 @@ class _BattleScreenState extends State<BattleScreen> {
           child: Center(
             child: Image.asset(
               'assets/art/production/badges/badge-infantry.png',
-              width: 20,
-              height: 20,
+              width: 14,
+              height: 14,
               fit: BoxFit.contain,
             ),
           ),
         ),
-        const SizedBox(width: 4),
-        // Stack count beside the badge
+        const SizedBox(width: 2),
+        // Stack count beside the badge (compact)
         Text(
           '×$infantry',
           style: TextStyle(
             fontFamily: 'Oswald',
-            fontSize: 11,
+            fontSize: 10,
             fontWeight: FontWeight.w700,
             color: SiegeTheme.attacker,
             shadows: [
