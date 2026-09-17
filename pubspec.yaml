@@ -68,6 +68,7 @@ flutter:
     - assets/art/production/cards/
     - assets/art/production/icons/
     - assets/art/production/badges/
+    - assets/art/production/chrome/
     - assets/art/production/nodes/
 
   # An image asset can refer to one or more resolution-specific "variants", see
