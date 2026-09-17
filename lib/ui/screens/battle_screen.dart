@@ -228,6 +228,8 @@ class _BattleScreenState extends State<BattleScreen> {
     final iconAsset = isDefender 
         ? 'assets/art/production/icons/icon-wall.png'
         : 'assets/art/production/icons/icon-catapult.png';
+    
+    final hasBadges = fire.isNotEmpty || (infantry != null && infantry > 0);
 
     return Row(
       children: [
@@ -305,7 +307,7 @@ class _BattleScreenState extends State<BattleScreen> {
                       ),
                     ),
                   ),
-                  // White centered current/max text ON the bar
+                  // White centered current/max text ON the bar (never covered)
                   Positioned.fill(
                     child: Center(
                       child: Row(
@@ -363,28 +365,6 @@ class _BattleScreenState extends State<BattleScreen> {
                       ),
                     ),
                   ),
-                  // Status badges ON the bar (right side)
-                  if (fire.isNotEmpty || (infantry != null && infantry > 0))
-                    Positioned(
-                      right: 8,
-                      top: 0,
-                      bottom: 0,
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          if (fire.isNotEmpty)
-                            _buildFireBadge(fire),
-                          if (fire.isNotEmpty && infantry != null && infantry > 0)
-                            const SizedBox(width: 6),
-                          if (infantry != null && infantry > 0)
-                            _buildBarBadge(
-                              'assets/art/production/badges/badge-infantry.png',
-                              '×$infantry',
-                              SiegeTheme.attacker,
-                            ),
-                        ],
-                      ),
-                    ),
                   // Label (top-left corner, small)
                   Positioned(
                     left: 8,
@@ -412,6 +392,22 @@ class _BattleScreenState extends State<BattleScreen> {
             ),
           ),
         ),
+        // Status badges to the RIGHT of the bar (outside fill, never cover text)
+        if (hasBadges) ...[
+          const SizedBox(width: 6),
+          Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              if (fire.isNotEmpty)
+                _buildCompactFireBadge(fire),
+              if (fire.isNotEmpty && infantry != null && infantry > 0)
+                const SizedBox(height: 4),
+              if (infantry != null && infantry > 0)
+                _buildCompactInfantryBadge(infantry),
+            ],
+          ),
+        ],
       ],
     );
   }
@@ -489,6 +485,100 @@ class _BattleScreenState extends State<BattleScreen> {
           ),
         ],
       ),
+    );
+  }
+
+  Widget _buildCompactFireBadge(List<int> fire) {
+    // Compact fire badge to the right of HP bar: circular badge + countdown
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        // Circular fire badge
+        Container(
+          width: 24,
+          height: 24,
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            border: Border.all(
+              color: SiegeTheme.danger.withOpacity(0.8),
+              width: 1.5,
+            ),
+          ),
+          child: Center(
+            child: Image.asset(
+              'assets/art/production/badges/badge-fire.png',
+              width: 20,
+              height: 20,
+              fit: BoxFit.contain,
+            ),
+          ),
+        ),
+        const SizedBox(width: 4),
+        // Live countdown text beside the badge
+        Text(
+          fire.join('→'),
+          style: TextStyle(
+            fontFamily: 'Oswald',
+            fontSize: 11,
+            fontWeight: FontWeight.w700,
+            color: SiegeTheme.danger,
+            shadows: [
+              Shadow(
+                color: Colors.black.withOpacity(0.8),
+                blurRadius: 2,
+                offset: const Offset(0, 1),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildCompactInfantryBadge(int infantry) {
+    // Compact infantry badge to the right of HP bar
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        // Circular infantry badge
+        Container(
+          width: 24,
+          height: 24,
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            border: Border.all(
+              color: SiegeTheme.attacker.withOpacity(0.8),
+              width: 1.5,
+            ),
+          ),
+          child: Center(
+            child: Image.asset(
+              'assets/art/production/badges/badge-infantry.png',
+              width: 20,
+              height: 20,
+              fit: BoxFit.contain,
+            ),
+          ),
+        ),
+        const SizedBox(width: 4),
+        // Stack count beside the badge
+        Text(
+          '×$infantry',
+          style: TextStyle(
+            fontFamily: 'Oswald',
+            fontSize: 11,
+            fontWeight: FontWeight.w700,
+            color: SiegeTheme.attacker,
+            shadows: [
+              Shadow(
+                color: Colors.black.withOpacity(0.8),
+                blurRadius: 2,
+                offset: const Offset(0, 1),
+              ),
+            ],
+          ),
+        ),
+      ],
     );
   }
 
