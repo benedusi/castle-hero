@@ -103,7 +103,7 @@ class _BattleScreenState extends State<BattleScreen> {
             ),
           ),
         ),
-        // HP bars positioned L/R over battlefield assets
+        // HP bars positioned L/R over battlefield assets - mock §03 chrome
         Positioned(
           top: 60,
           left: 0,
@@ -113,64 +113,65 @@ class _BattleScreenState extends State<BattleScreen> {
             child: Padding(
               padding: const EdgeInsets.symmetric(horizontal: 14.0),
               child: Container(
-                height: 54,
+                height: 68,
                 decoration: BoxDecoration(
-                  // One continuous beveled metallic strip (mock §03)
-                  color: SiegeTheme.panel.withOpacity(0.9),
-                  borderRadius: BorderRadius.circular(10),
-                  border: Border.all(
-                    color: SiegeTheme.line.withOpacity(0.7),
-                    width: 2,
+                  // Use production chrome frame as actual panel
+                  image: const DecorationImage(
+                    image: AssetImage('assets/art/production/chrome/hp-strip-frame.png'),
+                    fit: BoxFit.fill,
                   ),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withOpacity(0.4),
-                      blurRadius: 6,
-                      offset: const Offset(0, 3),
+                      color: Colors.black.withOpacity(0.5),
+                      blurRadius: 8,
+                      offset: const Offset(0, 4),
                     ),
                   ],
                 ),
-                child: Row(
-                  children: [
-                    // Catapult side (LEFT, warm)
-                    Expanded(
-                      child: _buildSideStrip(
-                        iconAsset: 'assets/art/production/icons/icon-catapult.png',
-                        current: state.attacker.catapult,
-                        max: state.catapultMax,
-                        isDefender: false,
-                        fire: state.catapultFire,
-                        infantry: null, // Infantry on wall only
-                      ),
-                    ),
-                    // Divider between sides
-                    Container(
-                      width: 2,
-                      margin: const EdgeInsets.symmetric(vertical: 8),
-                      decoration: BoxDecoration(
-                        gradient: LinearGradient(
-                          begin: Alignment.topCenter,
-                          end: Alignment.bottomCenter,
-                          colors: [
-                            SiegeTheme.line.withOpacity(0.3),
-                            SiegeTheme.line.withOpacity(0.7),
-                            SiegeTheme.line.withOpacity(0.3),
-                          ],
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 10.0),
+                  child: Row(
+                    children: [
+                      // Catapult side (LEFT, warm)
+                      Expanded(
+                        child: _buildSideSlot(
+                          iconAsset: 'assets/art/production/icons/icon-catapult.png',
+                          current: state.attacker.catapult,
+                          max: state.catapultMax,
+                          isDefender: false,
+                          fire: state.catapultFire,
+                          infantry: null, // Infantry on wall only
                         ),
                       ),
-                    ),
-                    // Wall side (RIGHT, cool)
-                    Expanded(
-                      child: _buildSideStrip(
-                        iconAsset: 'assets/art/production/icons/icon-wall.png',
-                        current: state.defender.wall,
-                        max: state.wallMax,
-                        isDefender: true,
-                        fire: state.gateFire,
-                        infantry: state.infantry,
+                      // Divider between sides
+                      Container(
+                        width: 2,
+                        margin: const EdgeInsets.symmetric(vertical: 6),
+                        decoration: BoxDecoration(
+                          gradient: LinearGradient(
+                            begin: Alignment.topCenter,
+                            end: Alignment.bottomCenter,
+                            colors: [
+                              Colors.white.withOpacity(0.1),
+                              Colors.white.withOpacity(0.3),
+                              Colors.white.withOpacity(0.1),
+                            ],
+                          ),
+                        ),
                       ),
-                    ),
-                  ],
+                      // Wall side (RIGHT, cool)
+                      Expanded(
+                        child: _buildSideSlot(
+                          iconAsset: 'assets/art/production/icons/icon-wall.png',
+                          current: state.defender.wall,
+                          max: state.wallMax,
+                          isDefender: true,
+                          fire: state.gateFire,
+                          infantry: state.infantry,
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               ),
             ),
@@ -243,7 +244,7 @@ class _BattleScreenState extends State<BattleScreen> {
     );
   }
 
-  Widget _buildSideStrip({
+  Widget _buildSideSlot({
     required String iconAsset,
     required int current,
     required int max,
@@ -255,418 +256,181 @@ class _BattleScreenState extends State<BattleScreen> {
     final color = isDefender ? SiegeTheme.defender : SiegeTheme.attacker;
     final dimColor = isDefender ? SiegeTheme.defenderDim : SiegeTheme.attackerDim;
 
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 6),
-      child: Stack(
-        clipBehavior: Clip.none,
-        children: [
-          Row(
-            children: [
-              // Framed icon
-              Container(
-                width: 36,
-                height: 42,
-                decoration: BoxDecoration(
-                  color: SiegeTheme.background,
-                  borderRadius: BorderRadius.circular(6),
-                  border: Border.all(
-                    color: SiegeTheme.line.withOpacity(0.6),
-                    width: 1.5,
-                  ),
-                ),
-                child: Center(
-                  child: Image.asset(
-                    iconAsset,
-                    width: 28,
-                    height: 28,
-                    fit: BoxFit.contain,
-                  ),
-                ),
-              ),
-              const SizedBox(width: 6),
-              // HP bar - Expanded to fill available width
-              Expanded(
-                child: Container(
-                  height: 42,
-                  decoration: BoxDecoration(
-                    color: SiegeTheme.panel2,
-                    borderRadius: BorderRadius.circular(6),
-                    border: Border.all(
-                      color: SiegeTheme.line.withOpacity(0.4),
-                      width: 1,
-                    ),
-                  ),
-                  child: ClipRRect(
-                    borderRadius: BorderRadius.circular(5),
-                    child: Stack(
-                      children: [
-                        // Gradient fill
-                        FractionallySizedBox(
-                          alignment: Alignment.centerLeft,
-                          widthFactor: percentage,
-                          child: Container(
-                            decoration: BoxDecoration(
-                              gradient: LinearGradient(
-                                colors: [dimColor, color],
-                              ),
-                            ),
-                          ),
-                        ),
-                        // Centered HP text
-                        Center(
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Text(
-                                '$current',
-                                style: TextStyle(
-                                  fontFamily: 'Oswald',
-                                  fontSize: 20,
-                                  fontWeight: FontWeight.w700,
-                                  color: Colors.white,
-                                  shadows: [
-                                    Shadow(
-                                      color: Colors.black.withOpacity(0.9),
-                                      blurRadius: 4,
-                                      offset: const Offset(0, 1),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                              Text(
-                                ' / ',
-                                style: TextStyle(
-                                  fontFamily: 'Oswald',
-                                  fontSize: 15,
-                                  fontWeight: FontWeight.w400,
-                                  color: Colors.white.withOpacity(0.8),
-                                  shadows: [
-                                    Shadow(
-                                      color: Colors.black.withOpacity(0.9),
-                                      blurRadius: 4,
-                                      offset: const Offset(0, 1),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                              Text(
-                                '$max',
-                                style: TextStyle(
-                                  fontFamily: 'Oswald',
-                                  fontSize: 17,
-                                  fontWeight: FontWeight.w500,
-                                  color: Colors.white.withOpacity(0.9),
-                                  shadows: [
-                                    Shadow(
-                                      color: Colors.black.withOpacity(0.9),
-                                      blurRadius: 4,
-                                      offset: const Offset(0, 1),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              ),
-              // Placeholder for infantry width (wall only)
-              if (infantry != null && infantry > 0)
-                const SizedBox(width: 54), // Circular badge (28) + gap (2) + tag (~24)
-            ],
-          ),
-          // Fire badge overlapping bar's right end (mock §03: taller, pointer at bottom)
-          if (fire.isNotEmpty)
-            Positioned(
-              right: infantry != null && infantry > 0 ? 54 : 0, // Adjust for infantry width
-              top: -4,
-              bottom: -6,
-              child: Container(
-                width: 52,
-                height: 52,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: SiegeTheme.background,
-                  border: Border.all(
-                    color: SiegeTheme.danger.withOpacity(0.9),
-                    width: 2,
-                  ),
-                  boxShadow: [
-                    BoxShadow(
-                      color: SiegeTheme.danger.withOpacity(0.3),
-                      blurRadius: 8,
-                      spreadRadius: 2,
-                    ),
-                  ],
-                ),
-                child: Stack(
-                  children: [
-                    Center(
-                      child: Image.asset(
-                        'assets/art/production/badges/badge-fire.png',
-                        width: 40,
-                        height: 40,
-                        fit: BoxFit.contain,
-                      ),
-                    ),
-                    // Countdown text overlay
-                    Positioned(
-                      bottom: 4,
-                      left: 0,
-                      right: 0,
-                      child: Center(
-                        child: Text(
-                          fire.join('→'),
-                          style: TextStyle(
-                            fontFamily: 'Oswald',
-                            fontSize: 9,
-                            fontWeight: FontWeight.w700,
-                            color: Colors.white,
-                            shadows: [
-                              Shadow(
-                                color: Colors.black.withOpacity(0.9),
-                                blurRadius: 2,
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          // Infantry badge far right (wall only, mock §03: circular badge + ×N tag beside it)
-          if (infantry != null && infantry > 0)
-            Positioned(
-              right: 0,
-              top: 0,
-              bottom: 0,
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  // Circular infantry badge
-                  Container(
-                    width: 28,
-                    height: 28,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      color: SiegeTheme.background,
-                      border: Border.all(
-                        color: SiegeTheme.attacker.withOpacity(0.9),
-                        width: 1.5,
-                      ),
-                    ),
-                    child: Center(
-                      child: Image.asset(
-                        'assets/art/production/badges/badge-infantry.png',
-                        width: 22,
-                        height: 22,
-                        fit: BoxFit.contain,
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 2),
-                  // ×N tag with live Flutter count
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
-                    decoration: BoxDecoration(
-                      color: SiegeTheme.background,
-                      borderRadius: BorderRadius.circular(4),
-                      border: Border.all(
-                        color: SiegeTheme.attacker.withOpacity(0.9),
-                        width: 1.5,
-                      ),
-                    ),
-                    child: Text(
-                      '×$infantry',
-                      style: TextStyle(
-                        fontFamily: 'Oswald',
-                        fontSize: 11,
-                        fontWeight: FontWeight.w700,
-                        color: SiegeTheme.attacker,
-                        height: 1.0,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildBarBadge(String badgeAsset, String text, Color color) {
-    // Badge that sits ON the HP bar (infantry, etc.)
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
-      decoration: BoxDecoration(
-        color: Colors.black.withOpacity(0.7),
-        border: Border.all(
-          color: color.withOpacity(0.8),
-          width: 1.5,
-        ),
-        borderRadius: BorderRadius.circular(6),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Image.asset(
-            badgeAsset,
-            width: 16,
-            height: 16,
-            fit: BoxFit.contain,
-          ),
-          const SizedBox(width: 4),
-          Text(
-            text,
-            style: TextStyle(
-              fontFamily: 'Oswald',
-              fontSize: 12,
-              fontWeight: FontWeight.w700,
-              color: Colors.white,
-              height: 1.0,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildFireBadge(List<int> fire) {
-    // Fire DoT badge: digit-free pill chrome + live Flutter countdown
-    return Container(
-      height: 24,
-      padding: const EdgeInsets.only(left: 4, right: 8),
-      decoration: BoxDecoration(
-        color: Colors.black.withOpacity(0.7),
-        border: Border.all(
-          color: SiegeTheme.danger.withOpacity(0.8),
-          width: 1.5,
-        ),
-        borderRadius: BorderRadius.circular(6),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          // Digit-free pill chrome (flame icon on left)
-          Image.asset(
-            'assets/art/production/badges/pill-fire-turns.png',
-            height: 20,
-            fit: BoxFit.contain,
-          ),
-          const SizedBox(width: 4),
-          // Live Flutter countdown text in the empty right area
-          Text(
-            fire.join('→'),
-            style: TextStyle(
-              fontFamily: 'Oswald',
-              fontSize: 12,
-              fontWeight: FontWeight.w700,
-              color: Colors.white,
-              height: 1.0,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildCompactFireBadge(List<int> fire) {
-    // Ultra-compact fire badge for narrow widths: small circular badge + short countdown
+    // Mock §03 target slot order: [icon][HP fill + readable text][fire medallion][infantry tags...]
     return Row(
-      mainAxisSize: MainAxisSize.min,
       children: [
-        // Circular fire badge (smaller for tight widths)
+        // 1. Framed icon (no ColorFilter)
         Container(
-          width: 18,
-          height: 18,
-          decoration: BoxDecoration(
-            shape: BoxShape.circle,
-            border: Border.all(
-              color: SiegeTheme.danger.withOpacity(0.8),
-              width: 1.5,
+          width: 40,
+          height: 48,
+          padding: const EdgeInsets.all(4),
+          child: Image.asset(
+            iconAsset,
+            fit: BoxFit.contain,
+          ),
+        ),
+        const SizedBox(width: 6),
+        // 2. HP bar with trough chrome + centered text (Expanded to fill available space)
+        Expanded(
+          child: Container(
+            height: 48,
+            decoration: BoxDecoration(
+              // Use production trough chrome as background
+              image: const DecorationImage(
+                image: AssetImage('assets/art/production/chrome/hp-bar-trough.png'),
+                fit: BoxFit.fill,
+              ),
+            ),
+            child: Stack(
+              children: [
+                // HP fill gradient
+                Padding(
+                  padding: const EdgeInsets.all(4.0),
+                  child: FractionallySizedBox(
+                    alignment: Alignment.centerLeft,
+                    widthFactor: percentage,
+                    child: Container(
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          colors: [dimColor, color],
+                        ),
+                        borderRadius: BorderRadius.circular(4),
+                      ),
+                    ),
+                  ),
+                ),
+                // Centered HP text - fully readable, never covered
+                Center(
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        '$current',
+                        style: TextStyle(
+                          fontFamily: 'Oswald',
+                          fontSize: 22,
+                          fontWeight: FontWeight.w700,
+                          color: Colors.white,
+                          shadows: [
+                            Shadow(
+                              color: Colors.black.withOpacity(0.9),
+                              blurRadius: 4,
+                              offset: const Offset(0, 1),
+                            ),
+                          ],
+                        ),
+                      ),
+                      Text(
+                        ' / ',
+                        style: TextStyle(
+                          fontFamily: 'Oswald',
+                          fontSize: 16,
+                          fontWeight: FontWeight.w400,
+                          color: Colors.white.withOpacity(0.9),
+                          shadows: [
+                            Shadow(
+                              color: Colors.black.withOpacity(0.9),
+                              blurRadius: 4,
+                              offset: const Offset(0, 1),
+                            ),
+                          ],
+                        ),
+                      ),
+                      Text(
+                        '$max',
+                        style: TextStyle(
+                          fontFamily: 'Oswald',
+                          fontSize: 18,
+                          fontWeight: FontWeight.w500,
+                          color: Colors.white.withOpacity(0.9),
+                          shadows: [
+                            Shadow(
+                              color: Colors.black.withOpacity(0.9),
+                              blurRadius: 4,
+                              offset: const Offset(0, 1),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
             ),
           ),
-          child: Center(
+        ),
+        const SizedBox(width: 6),
+        // 3. Fire medallion + DoT countdown beside it (reserved end slot)
+        if (fire.isNotEmpty) ...[
+          // Flame medallion only (badge-fire tip)
+          SizedBox(
+            width: 36,
+            height: 48,
             child: Image.asset(
               'assets/art/production/badges/badge-fire.png',
-              width: 14,
-              height: 14,
               fit: BoxFit.contain,
             ),
           ),
-        ),
-        const SizedBox(width: 2),
-        // Live countdown text beside the badge (compact)
-        Text(
-          fire.join('→'),
-          style: TextStyle(
-            fontFamily: 'Oswald',
-            fontSize: 10,
-            fontWeight: FontWeight.w700,
-            color: SiegeTheme.danger,
-            shadows: [
-              Shadow(
-                color: Colors.black.withOpacity(0.8),
-                blurRadius: 2,
-                offset: const Offset(0, 1),
+          const SizedBox(width: 2),
+          // DoT countdown beside medallion (small, not on face)
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+            decoration: BoxDecoration(
+              color: Colors.black.withOpacity(0.6),
+              borderRadius: BorderRadius.circular(4),
+              border: Border.all(
+                color: SiegeTheme.danger.withOpacity(0.8),
+                width: 1,
               ),
-            ],
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildCompactInfantryBadge(int infantry) {
-    // Ultra-compact infantry badge for narrow widths
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        // Circular infantry badge (smaller for tight widths)
-        Container(
-          width: 18,
-          height: 18,
-          decoration: BoxDecoration(
-            shape: BoxShape.circle,
-            border: Border.all(
-              color: SiegeTheme.attacker.withOpacity(0.8),
-              width: 1.5,
+            ),
+            child: Text(
+              fire.join('→'),
+              style: TextStyle(
+                fontFamily: 'Oswald',
+                fontSize: 10,
+                fontWeight: FontWeight.w700,
+                color: SiegeTheme.danger,
+                height: 1.0,
+              ),
             ),
           ),
-          child: Center(
+          const SizedBox(width: 4),
+        ],
+        // 4. Infantry tags (wall only) - stack helmet+×N past fire badge
+        if (infantry != null && infantry > 0) ...[
+          // Helmet badge
+          SizedBox(
+            width: 28,
+            height: 28,
             child: Image.asset(
               'assets/art/production/badges/badge-infantry.png',
-              width: 14,
-              height: 14,
               fit: BoxFit.contain,
             ),
           ),
-        ),
-        const SizedBox(width: 2),
-        // Stack count beside the badge (compact)
-        Text(
-          '×$infantry',
-          style: TextStyle(
-            fontFamily: 'Oswald',
-            fontSize: 10,
-            fontWeight: FontWeight.w700,
-            color: SiegeTheme.attacker,
-            shadows: [
-              Shadow(
-                color: Colors.black.withOpacity(0.8),
-                blurRadius: 2,
-                offset: const Offset(0, 1),
+          const SizedBox(width: 2),
+          // ×N tag with live Flutter text
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 3),
+            decoration: BoxDecoration(
+              color: Colors.black.withOpacity(0.7),
+              borderRadius: BorderRadius.circular(4),
+              border: Border.all(
+                color: SiegeTheme.attacker.withOpacity(0.9),
+                width: 1.5,
               ),
-            ],
+            ),
+            child: Text(
+              '×$infantry',
+              style: TextStyle(
+                fontFamily: 'Oswald',
+                fontSize: 11,
+                fontWeight: FontWeight.w700,
+                color: SiegeTheme.attacker,
+                height: 1.0,
+              ),
+            ),
           ),
-        ),
+        ],
       ],
     );
   }
