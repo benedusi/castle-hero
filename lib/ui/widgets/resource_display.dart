@@ -55,13 +55,13 @@ class ResourceDisplay extends StatelessWidget {
     required int value,
     required bool isUnaffordable,
   }) {
-    // Resource HUD Batch 6: chip frame + icon left + Flutter number right
+    // Resource HUD Batch 6: chip frame + icon left + Flutter number right (smaller for top layout)
     final frameAsset = isUnaffordable
         ? 'assets/art/production/chrome/resource-chip-unaffordable.png'
         : 'assets/art/production/chrome/resource-chip-frame.png';
 
     return Container(
-      height: 56,
+      height: 42, // Smaller for top position (was 56)
       decoration: BoxDecoration(
         // Use production chrome chip frame as actual panel
         image: DecorationImage(
@@ -70,17 +70,17 @@ class ResourceDisplay extends StatelessWidget {
         ),
       ),
       child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 6), // Reduced from 8
         child: Row(
           children: [
-            // Icon left (~48px)
+            // Icon left (smaller)
             Image.asset(
               iconPath,
-              width: 40,
-              height: 40,
+              width: 28, // Reduced from 40
+              height: 28,
               fit: BoxFit.contain,
             ),
-            const SizedBox(width: 8),
+            const SizedBox(width: 6), // Reduced from 8
             // Flutter number right
             Expanded(
               child: Text(
@@ -88,7 +88,7 @@ class ResourceDisplay extends StatelessWidget {
                 textAlign: TextAlign.right,
                 style: TextStyle(
                   fontFamily: 'Oswald',
-                  fontSize: 28,
+                  fontSize: 22, // Reduced from 28
                   fontWeight: FontWeight.w700,
                   color: isUnaffordable ? SiegeTheme.danger : SiegeTheme.ink,
                   shadows: [

@@ -88,7 +88,7 @@ class _BattleScreenState extends State<BattleScreen> {
             ),
           ),
         ),
-        // Header and day label (top safe area)
+        // HP bars at very top - mock §03 chrome + Day label inside
         Positioned(
           top: 0,
           left: 0,
@@ -96,20 +96,7 @@ class _BattleScreenState extends State<BattleScreen> {
           child: SafeArea(
             bottom: false,
             child: Padding(
-              padding: const EdgeInsets.all(14.0),
-              child: _buildHeader(state),
-            ),
-          ),
-        ),
-        // HP bars positioned L/R over battlefield assets - mock §03 chrome
-        Positioned(
-          top: 60,
-          left: 0,
-          right: 0,
-          child: SafeArea(
-            bottom: false,
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 14.0),
+              padding: const EdgeInsets.symmetric(horizontal: 14.0, vertical: 8.0),
               child: Container(
                 height: 58, // Taller to accommodate bars + statuses below
                 decoration: BoxDecoration(
@@ -126,56 +113,91 @@ class _BattleScreenState extends State<BattleScreen> {
                     ),
                   ],
                 ),
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 8.0),
-                  child: Row(
-                    children: [
-                      // Catapult side (LEFT, warm)
-                      Expanded(
-                        child: _buildSideSlot(
-                          iconAsset: 'assets/art/production/icons/icon-catapult.png',
-                          current: state.attacker.catapult,
-                          max: state.catapultMax,
-                          isDefender: false,
-                          fire: state.catapultFire,
-                          infantry: null, // Infantry on wall only
-                        ),
-                      ),
-                      // Divider between sides
-                      Container(
-                        width: 2,
-                        margin: const EdgeInsets.symmetric(vertical: 4),
-                        decoration: BoxDecoration(
-                          gradient: LinearGradient(
-                            begin: Alignment.topCenter,
-                            end: Alignment.bottomCenter,
-                            colors: [
-                              Colors.white.withOpacity(0.1),
-                              Colors.white.withOpacity(0.3),
-                              Colors.white.withOpacity(0.1),
-                            ],
+                child: Stack(
+                  children: [
+                    // HP bars
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 8.0),
+                      child: Row(
+                        children: [
+                          // Catapult side (LEFT, warm)
+                          Expanded(
+                            child: _buildSideSlot(
+                              iconAsset: 'assets/art/production/icons/icon-catapult.png',
+                              current: state.attacker.catapult,
+                              max: state.catapultMax,
+                              isDefender: false,
+                              fire: state.catapultFire,
+                              infantry: null, // Infantry on wall only
+                            ),
                           ),
+                          // Divider between sides
+                          Container(
+                            width: 2,
+                            margin: const EdgeInsets.symmetric(vertical: 4),
+                            decoration: BoxDecoration(
+                              gradient: LinearGradient(
+                                begin: Alignment.topCenter,
+                                end: Alignment.bottomCenter,
+                                colors: [
+                                  Colors.white.withOpacity(0.1),
+                                  Colors.white.withOpacity(0.3),
+                                  Colors.white.withOpacity(0.1),
+                                ],
+                              ),
+                            ),
+                          ),
+                          // Wall side (RIGHT, cool)
+                          Expanded(
+                            child: _buildSideSlot(
+                              iconAsset: 'assets/art/production/icons/icon-wall.png',
+                              current: state.defender.wall,
+                              max: state.wallMax,
+                              isDefender: true,
+                              fire: state.gateFire,
+                              infantry: state.infantry,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    // Day label (top-right inside HP frame)
+                    Positioned(
+                      top: 8,
+                      right: 12,
+                      child: Text(
+                        'Day ${state.turn}',
+                        style: TextStyle(
+                          fontFamily: 'Oswald',
+                          fontSize: 13,
+                          fontWeight: FontWeight.w500,
+                          color: SiegeTheme.muted,
+                          shadows: [
+                            Shadow(
+                              color: Colors.black.withOpacity(0.5),
+                              blurRadius: 2,
+                            ),
+                          ],
                         ),
                       ),
-                      // Wall side (RIGHT, cool)
-                      Expanded(
-                        child: _buildSideSlot(
-                          iconAsset: 'assets/art/production/icons/icon-wall.png',
-                          current: state.defender.wall,
-                          max: state.wallMax,
-                          isDefender: true,
-                          fire: state.gateFire,
-                          infantry: state.infantry,
-                        ),
-                      ),
-                    ],
-                  ),
+                    ),
+                  ],
                 ),
               ),
             ),
           ),
         ),
-        // Bottom chrome bar: log → resources → hand → actions
+        // Resource chips directly below HP strip (smaller)
+        Positioned(
+          top: 74, // Just below HP strip (58 + 8 padding + 8 spacing)
+          left: 0,
+          right: 0,
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 14.0),
+            child: _buildResourceDisplay(state),
+          ),
+        ),
+        // Bottom chrome bar: log → hand → actions
         Positioned(
           left: 0,
           right: 0,
@@ -190,48 +212,18 @@ class _BattleScreenState extends State<BattleScreen> {
                   // Battle log (1-2 lines)
                   BattleLog(log: state.log),
                   const SizedBox(height: 8),
-                  // Resources (stone/food/gold fixed order)
-                  _buildResourceDisplay(state),
-                  const SizedBox(height: 8),
                   // Hand header
                   _buildHandHeader(state),
                   const SizedBox(height: 6),
                   // Hand of 3
                   _buildHand(controller, state),
                   const SizedBox(height: 8),
-                  // Play / Discard (thumb zone)
+                  // Retreat / hint
                   _buildActions(context, controller, state),
                   _buildHint(controller, state),
                 ],
               ),
             ),
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildHeader(GameState state) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-        Text(
-          'SIEGE',
-          style: TextStyle(
-            fontFamily: 'Oswald',
-            fontSize: 26,
-            fontWeight: FontWeight.w700,
-            letterSpacing: 1.56,
-            color: SiegeTheme.ink,
-          ),
-        ),
-        Text(
-          'Day ${state.turn}',
-          style: TextStyle(
-            fontFamily: 'Oswald',
-            fontSize: 15,
-            fontWeight: FontWeight.w500,
-            color: SiegeTheme.muted,
           ),
         ),
       ],
