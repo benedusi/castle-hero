@@ -193,11 +193,7 @@ class _BattleScreenState extends State<BattleScreen> {
                   BattleLog(log: state.log),
                   const SizedBox(height: 8),
                   // Resources (stone/food/gold fixed order)
-                  ResourceDisplay(
-                    stone: state.attacker.stone,
-                    food: state.attacker.food,
-                    gold: state.attacker.gold,
-                  ),
+                  _buildResourceDisplay(state),
                   const SizedBox(height: 8),
                   // Hand header
                   _buildHandHeader(state),
@@ -241,6 +237,34 @@ class _BattleScreenState extends State<BattleScreen> {
           ),
         ),
       ],
+    );
+  }
+
+  Widget _buildResourceDisplay(GameState state) {
+    // Calculate unaffordable resources based on selected card cost vs balance
+    bool stoneUnaffordable = false;
+    bool foodUnaffordable = false;
+    bool goldUnaffordable = false;
+
+    if (_selectedCardIndex != null && 
+        _selectedCardIndex! < state.attacker.hand.length) {
+      final selectedCard = state.attacker.hand[_selectedCardIndex!];
+      final cardDef = attackerCards[selectedCard];
+      if (cardDef != null) {
+        final cost = cardDef.cost;
+        stoneUnaffordable = cost.stone > state.attacker.stone;
+        foodUnaffordable = cost.food > state.attacker.food;
+        goldUnaffordable = cost.gold > state.attacker.gold;
+      }
+    }
+
+    return ResourceDisplay(
+      stone: state.attacker.stone,
+      food: state.attacker.food,
+      gold: state.attacker.gold,
+      stoneUnaffordable: stoneUnaffordable,
+      foodUnaffordable: foodUnaffordable,
+      goldUnaffordable: goldUnaffordable,
     );
   }
 
