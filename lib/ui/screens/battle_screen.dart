@@ -113,7 +113,7 @@ class _BattleScreenState extends State<BattleScreen> {
             child: Padding(
               padding: const EdgeInsets.symmetric(horizontal: 14.0),
               child: Container(
-                height: 48,
+                height: 58, // Taller to accommodate bars + statuses below
                 decoration: BoxDecoration(
                   // Use production chrome frame as actual panel
                   image: const DecorationImage(
@@ -256,181 +256,200 @@ class _BattleScreenState extends State<BattleScreen> {
     final color = isDefender ? SiegeTheme.defender : SiegeTheme.attacker;
     final dimColor = isDefender ? SiegeTheme.defenderDim : SiegeTheme.attackerDim;
 
-    // Mock §03 target slot order: [icon][HP fill + readable text][fire medallion][infantry tags...]
-    // Compact sizing for ~390px phones - badges in end slots
-    return Row(
+    final hasStatuses = fire.isNotEmpty || (infantry != null && infantry > 0);
+
+    // Layout: HP bar on top, statuses below (not beside)
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // 1. Framed icon (no ColorFilter) - compact 32×32 for narrow widths
-        SizedBox(
-          width: 32,
-          height: 32,
-          child: Image.asset(
-            iconAsset,
-            fit: BoxFit.contain,
-          ),
-        ),
-        const SizedBox(width: 4),
-        // 2. HP bar with trough chrome + centered text (Expanded to fill REMAINING space)
-        Expanded(
-          child: Container(
-            height: 32,
-            decoration: BoxDecoration(
-              // Use production trough chrome as background
-              image: const DecorationImage(
-                image: AssetImage('assets/art/production/chrome/hp-bar-trough.png'),
-                fit: BoxFit.fill,
+        // Top row: [framed icon][Expanded HP bar with trough + centered text]
+        Row(
+          children: [
+            // Framed icon (no ColorFilter)
+            SizedBox(
+              width: 32,
+              height: 32,
+              child: Image.asset(
+                iconAsset,
+                fit: BoxFit.contain,
               ),
             ),
-            child: Stack(
-              children: [
-                // HP fill gradient
-                Padding(
-                  padding: const EdgeInsets.all(3.0),
-                  child: FractionallySizedBox(
-                    alignment: Alignment.centerLeft,
-                    widthFactor: percentage,
-                    child: Container(
-                      decoration: BoxDecoration(
-                        gradient: LinearGradient(
-                          colors: [dimColor, color],
+            const SizedBox(width: 4),
+            // HP bar with trough chrome + centered text (Expanded to fill available width)
+            Expanded(
+              child: Container(
+                height: 32,
+                decoration: BoxDecoration(
+                  // Use production trough chrome as background
+                  image: const DecorationImage(
+                    image: AssetImage('assets/art/production/chrome/hp-bar-trough.png'),
+                    fit: BoxFit.fill,
+                  ),
+                ),
+                child: Stack(
+                  children: [
+                    // HP fill gradient
+                    Padding(
+                      padding: const EdgeInsets.all(3.0),
+                      child: FractionallySizedBox(
+                        alignment: Alignment.centerLeft,
+                        widthFactor: percentage,
+                        child: Container(
+                          decoration: BoxDecoration(
+                            gradient: LinearGradient(
+                              colors: [dimColor, color],
+                            ),
+                            borderRadius: BorderRadius.circular(3),
+                          ),
                         ),
-                        borderRadius: BorderRadius.circular(3),
+                      ),
+                    ),
+                    // Centered HP text - fully readable, never covered
+                    Center(
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(
+                            '$current',
+                            style: TextStyle(
+                              fontFamily: 'Oswald',
+                              fontSize: 16,
+                              fontWeight: FontWeight.w700,
+                              color: Colors.white,
+                              shadows: [
+                                Shadow(
+                                  color: Colors.black.withOpacity(0.9),
+                                  blurRadius: 3,
+                                  offset: const Offset(0, 1),
+                                ),
+                              ],
+                            ),
+                          ),
+                          Text(
+                            ' / ',
+                            style: TextStyle(
+                              fontFamily: 'Oswald',
+                              fontSize: 12,
+                              fontWeight: FontWeight.w400,
+                              color: Colors.white.withOpacity(0.9),
+                              shadows: [
+                                Shadow(
+                                  color: Colors.black.withOpacity(0.9),
+                                  blurRadius: 3,
+                                  offset: const Offset(0, 1),
+                                ),
+                              ],
+                            ),
+                          ),
+                          Text(
+                            '$max',
+                            style: TextStyle(
+                              fontFamily: 'Oswald',
+                              fontSize: 14,
+                              fontWeight: FontWeight.w500,
+                              color: Colors.white.withOpacity(0.9),
+                              shadows: [
+                                Shadow(
+                                  color: Colors.black.withOpacity(0.9),
+                                  blurRadius: 3,
+                                  offset: const Offset(0, 1),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        ),
+        // Below: status badges (fire medallion + DoT, infantry helmet + ×N)
+        if (hasStatuses) ...[
+          const SizedBox(height: 3),
+          Padding(
+            padding: const EdgeInsets.only(left: 36), // Align below HP bar (after icon)
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                // Fire medallion + DoT countdown (under relevant bar)
+                if (fire.isNotEmpty) ...[
+                  // Flame medallion only (badge-fire tip)
+                  SizedBox(
+                    width: 20,
+                    height: 20,
+                    child: Image.asset(
+                      'assets/art/production/badges/badge-fire.png',
+                      fit: BoxFit.contain,
+                    ),
+                  ),
+                  const SizedBox(width: 2),
+                  // DoT countdown: first tick only
+                  Container(
+                    width: 14,
+                    height: 14,
+                    decoration: BoxDecoration(
+                      color: Colors.black.withOpacity(0.7),
+                      shape: BoxShape.circle,
+                      border: Border.all(
+                        color: SiegeTheme.danger.withOpacity(0.9),
+                        width: 1,
+                      ),
+                    ),
+                    child: Center(
+                      child: Text(
+                        '${fire.first}',
+                        style: TextStyle(
+                          fontFamily: 'Oswald',
+                          fontSize: 9,
+                          fontWeight: FontWeight.w700,
+                          color: SiegeTheme.danger,
+                          height: 1.0,
+                        ),
                       ),
                     ),
                   ),
-                ),
-                // Centered HP text - fully readable, never covered
-                Center(
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Text(
-                        '$current',
-                        style: TextStyle(
-                          fontFamily: 'Oswald',
-                          fontSize: 16,
-                          fontWeight: FontWeight.w700,
-                          color: Colors.white,
-                          shadows: [
-                            Shadow(
-                              color: Colors.black.withOpacity(0.9),
-                              blurRadius: 3,
-                              offset: const Offset(0, 1),
-                            ),
-                          ],
-                        ),
-                      ),
-                      Text(
-                        ' / ',
-                        style: TextStyle(
-                          fontFamily: 'Oswald',
-                          fontSize: 12,
-                          fontWeight: FontWeight.w400,
-                          color: Colors.white.withOpacity(0.9),
-                          shadows: [
-                            Shadow(
-                              color: Colors.black.withOpacity(0.9),
-                              blurRadius: 3,
-                              offset: const Offset(0, 1),
-                            ),
-                          ],
-                        ),
-                      ),
-                      Text(
-                        '$max',
-                        style: TextStyle(
-                          fontFamily: 'Oswald',
-                          fontSize: 14,
-                          fontWeight: FontWeight.w500,
-                          color: Colors.white.withOpacity(0.9),
-                          shadows: [
-                            Shadow(
-                              color: Colors.black.withOpacity(0.9),
-                              blurRadius: 3,
-                              offset: const Offset(0, 1),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
+                  if (infantry != null && infantry > 0) const SizedBox(width: 6),
+                ],
+                // Infantry tags (wall only, can sit next to fire)
+                if (infantry != null && infantry > 0) ...[
+                  // Helmet badge
+                  SizedBox(
+                    width: 18,
+                    height: 18,
+                    child: Image.asset(
+                      'assets/art/production/badges/badge-infantry.png',
+                      fit: BoxFit.contain,
+                    ),
                   ),
-                ),
+                  const SizedBox(width: 2),
+                  // ×N tag with live Flutter text
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 3, vertical: 1),
+                    decoration: BoxDecoration(
+                      color: Colors.black.withOpacity(0.7),
+                      borderRadius: BorderRadius.circular(3),
+                      border: Border.all(
+                        color: SiegeTheme.attacker.withOpacity(0.9),
+                        width: 1,
+                      ),
+                    ),
+                    child: Text(
+                      '×$infantry',
+                      style: TextStyle(
+                        fontFamily: 'Oswald',
+                        fontSize: 8,
+                        fontWeight: FontWeight.w700,
+                        color: SiegeTheme.attacker,
+                        height: 1.0,
+                      ),
+                    ),
+                  ),
+                ],
               ],
-            ),
-          ),
-        ),
-        const SizedBox(width: 3),
-        // 3. Fire medallion + DoT countdown beside it (compact fixed-size end slot)
-        if (fire.isNotEmpty) ...[
-          // Flame medallion only (badge-fire tip) - compact 24×32
-          SizedBox(
-            width: 24,
-            height: 32,
-            child: Image.asset(
-              'assets/art/production/badges/badge-fire.png',
-              fit: BoxFit.contain,
-            ),
-          ),
-          const SizedBox(width: 1),
-          // DoT countdown: FIRST TICK ONLY (not full 3→2→1 chain) - compact
-          Container(
-            width: 16,
-            height: 16,
-            decoration: BoxDecoration(
-              color: Colors.black.withOpacity(0.7),
-              shape: BoxShape.circle,
-              border: Border.all(
-                color: SiegeTheme.danger.withOpacity(0.9),
-                width: 1,
-              ),
-            ),
-            child: Center(
-              child: Text(
-                '${fire.first}',
-                style: TextStyle(
-                  fontFamily: 'Oswald',
-                  fontSize: 10,
-                  fontWeight: FontWeight.w700,
-                  color: SiegeTheme.danger,
-                  height: 1.0,
-                ),
-              ),
-            ),
-          ),
-          const SizedBox(width: 2),
-        ],
-        // 4. Infantry tags (wall only) - compact helmet+×N past fire badge
-        if (infantry != null && infantry > 0) ...[
-          // Helmet badge - compact 20×20
-          SizedBox(
-            width: 20,
-            height: 20,
-            child: Image.asset(
-              'assets/art/production/badges/badge-infantry.png',
-              fit: BoxFit.contain,
-            ),
-          ),
-          const SizedBox(width: 1),
-          // ×N tag with live Flutter text - compact pill
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 3, vertical: 1),
-            decoration: BoxDecoration(
-              color: Colors.black.withOpacity(0.7),
-              borderRadius: BorderRadius.circular(3),
-              border: Border.all(
-                color: SiegeTheme.attacker.withOpacity(0.9),
-                width: 1,
-              ),
-            ),
-            child: Text(
-              '×$infantry',
-              style: TextStyle(
-                fontFamily: 'Oswald',
-                fontSize: 9,
-                fontWeight: FontWeight.w700,
-                color: SiegeTheme.attacker,
-                height: 1.0,
-              ),
             ),
           ),
         ],
