@@ -197,6 +197,31 @@ class _BattleScreenState extends State<BattleScreen> {
             child: _buildResourceDisplay(state),
           ),
         ),
+        // Retreat button directly below resources (compact)
+        Positioned(
+          top: 124, // Below resources (74 + 42 height + 8 spacing)
+          left: 0,
+          right: 0,
+          child: Center(
+            child: TextButton(
+              onPressed: () => _handleRetreat(context, controller),
+              style: TextButton.styleFrom(
+                foregroundColor: SiegeTheme.muted,
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                minimumSize: Size.zero,
+                tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+              ),
+              child: Text(
+                'Retreat',
+                style: TextStyle(
+                  fontFamily: 'Inter',
+                  fontSize: 11,
+                  decoration: TextDecoration.underline,
+                ),
+              ),
+            ),
+          ),
+        ),
         // Bottom chrome bar: log → hand → actions
         Positioned(
           left: 0,
@@ -218,8 +243,7 @@ class _BattleScreenState extends State<BattleScreen> {
                   // Hand of 3
                   _buildHand(controller, state),
                   const SizedBox(height: 8),
-                  // Retreat / hint
-                  _buildActions(context, controller, state),
+                  // Hint
                   _buildHint(controller, state),
                 ],
               ),
@@ -555,26 +579,6 @@ class _BattleScreenState extends State<BattleScreen> {
               );
             }
           },
-        ),
-      ),
-    );
-  }
-
-  Widget _buildActions(
-      BuildContext context, GameController controller, GameState state) {
-    // Simplified actions: just Retreat (tap-to-play, swipe-to-discard on cards directly)
-    return TextButton(
-      onPressed: () => _handleRetreat(context, controller),
-      style: TextButton.styleFrom(
-        foregroundColor: SiegeTheme.muted,
-        padding: const EdgeInsets.symmetric(vertical: 8),
-      ),
-      child: Text(
-        'Retreat',
-        style: TextStyle(
-          fontFamily: 'Inter',
-          fontSize: 12,
-          decoration: TextDecoration.underline,
         ),
       ),
     );
