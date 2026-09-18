@@ -19,8 +19,6 @@ class BattleScreen extends StatefulWidget {
 }
 
 class _BattleScreenState extends State<BattleScreen> {
-  int? _selectedCardIndex;
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -241,30 +239,14 @@ class _BattleScreenState extends State<BattleScreen> {
   }
 
   Widget _buildResourceDisplay(GameState state) {
-    // Calculate unaffordable resources based on selected card cost vs balance
-    bool stoneUnaffordable = false;
-    bool foodUnaffordable = false;
-    bool goldUnaffordable = false;
-
-    if (_selectedCardIndex != null && 
-        _selectedCardIndex! < state.attacker.hand.length) {
-      final selectedCard = state.attacker.hand[_selectedCardIndex!];
-      final cardDef = attackerCards[selectedCard];
-      if (cardDef != null) {
-        final cost = cardDef.cost;
-        stoneUnaffordable = cost.stone > state.attacker.stone;
-        foodUnaffordable = cost.food > state.attacker.food;
-        goldUnaffordable = cost.gold > state.attacker.gold;
-      }
-    }
-
+    // No selection state - resources just show current balance
     return ResourceDisplay(
       stone: state.attacker.stone,
       food: state.attacker.food,
       gold: state.attacker.gold,
-      stoneUnaffordable: stoneUnaffordable,
-      foodUnaffordable: foodUnaffordable,
-      goldUnaffordable: goldUnaffordable,
+      stoneUnaffordable: false,
+      foodUnaffordable: false,
+      goldUnaffordable: false,
     );
   }
 
@@ -526,8 +508,6 @@ class _BattleScreenState extends State<BattleScreen> {
                 state.attacker.gold,
                 def.cost,
               );
-
-              final isSelected = _selectedCardIndex == index;
               
               return Expanded(
                 child: Padding(
@@ -535,20 +515,24 @@ class _BattleScreenState extends State<BattleScreen> {
                     right: index < 2 ? 8.0 : 0,
                   ),
                   // Fixed aspect ratio slot - all cards equal size
-                  child: GestureDetector(
-                    onTap: canPlay ? () {
-                      setState(() {
-                        _selectedCardIndex = isSelected ? null : index;
-                      });
-                    } : null,
-                    child: Transform.translate(
-                      offset: isSelected ? const Offset(0, -8) : Offset.zero,
-                      child: AspectRatio(
-                        aspectRatio: 2 / 3, // Portrait card slot (0.667)
+                  child: Dismissible(
+                    key: ValueKey('card_$index'),
+                    direction: DismissDirection.down,
+                    onDismissed: (direction) {
+                      if (canPlay) {
+                        controller.discardCard(index);
+                      }
+                    },
+                    child: AspectRatio(
+                      aspectRatio: 2 / 3, // Portrait card slot (0.667)
+                      child: GestureDetector(
+                        onTap: canPlay && canAffordCard ? () {
+                          controller.playCard(index);
+                        } : null,
                         child: CardWidget(
                           card: def,
                           canPlay: canPlay && canAffordCard,
-                          onTap: null, // Selection handled by GestureDetector above
+                          onTap: null, // Tap handled by GestureDetector above
                         ),
                       ),
                     ),
@@ -586,101 +570,21 @@ class _BattleScreenState extends State<BattleScreen> {
 
   Widget _buildActions(
       BuildContext context, GameController controller, GameState state) {
-    final canAct = state.phase == Phase.player && !controller.isAiThinking;
-    final hasSelection = _selectedCardIndex != null;
-    final canPlaySelected = hasSelection && 
-        canAct && 
-        _selectedCardIndex! < state.attacker.hand.length;
-
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        // Primary actions: Play (warm) + Discard (cool)
-        Row(
-          children: [
-            // Discard (cool teal/steel)
-            Expanded(
-              child: ElevatedButton(
-                onPressed: hasSelection && canAct
-                    ? () {
-                        controller.discardCard(_selectedCardIndex!);
-                        setState(() => _selectedCardIndex = null);
-                      }
-                    : (canAct && state.attacker.hand.isNotEmpty
-                        ? () => _showDiscardDialog(context, controller, state)
-                        : null),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: SiegeTheme.defender,
-                  foregroundColor: SiegeTheme.ink,
-                  disabledBackgroundColor: SiegeTheme.panel2,
-                  padding: const EdgeInsets.symmetric(vertical: 12),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                ),
-                child: Text(
-                  'DISCARD',
-                  style: TextStyle(
-                    fontFamily: 'Oswald',
-                    fontSize: 13,
-                    fontWeight: FontWeight.w600,
-                    letterSpacing: 0.52,
-                  ),
-                ),
-              ),
-            ),
-            const SizedBox(width: 8),
-            // Play (warm amber - primary CTA)
-            Expanded(
-              flex: 2,
-              child: ElevatedButton(
-                onPressed: canPlaySelected
-                    ? () {
-                        controller.playCard(_selectedCardIndex!);
-                        setState(() => _selectedCardIndex = null);
-                      }
-                    : null,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: SiegeTheme.attacker,
-                  foregroundColor: SiegeTheme.background,
-                  disabledBackgroundColor: SiegeTheme.panel2,
-                  disabledForegroundColor: SiegeTheme.muted,
-                  padding: const EdgeInsets.symmetric(vertical: 12),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  elevation: canPlaySelected ? 4 : 0,
-                ),
-                child: Text(
-                  'PLAY',
-                  style: TextStyle(
-                    fontFamily: 'Oswald',
-                    fontSize: 15,
-                    fontWeight: FontWeight.w700,
-                    letterSpacing: 0.75,
-                  ),
-                ),
-              ),
-            ),
-          ],
+    // Simplified actions: just Retreat (tap-to-play, swipe-to-discard on cards directly)
+    return TextButton(
+      onPressed: () => _handleRetreat(context, controller),
+      style: TextButton.styleFrom(
+        foregroundColor: SiegeTheme.muted,
+        padding: const EdgeInsets.symmetric(vertical: 8),
+      ),
+      child: Text(
+        'Retreat',
+        style: TextStyle(
+          fontFamily: 'Inter',
+          fontSize: 12,
+          decoration: TextDecoration.underline,
         ),
-        // Secondary: Retreat (text button, tucked)
-        TextButton(
-          onPressed: () => _handleRetreat(context, controller),
-          style: TextButton.styleFrom(
-            foregroundColor: SiegeTheme.muted,
-            padding: const EdgeInsets.symmetric(vertical: 6),
-          ),
-          child: Text(
-            'Retreat',
-            style: TextStyle(
-              fontFamily: 'Inter',
-              fontSize: 12,
-              decoration: TextDecoration.underline,
-            ),
-          ),
-        ),
-      ],
+      ),
     );
   }
 
@@ -689,7 +593,7 @@ class _BattleScreenState extends State<BattleScreen> {
     if (controller.isAiThinking) {
       hint = 'The castle takes aim…';
     } else if (state.phase == Phase.player) {
-      hint = 'Play or discard one card to end your turn.';
+      hint = 'Tap to play · swipe down to discard';
     } else {
       hint = '';
     }
@@ -705,49 +609,6 @@ class _BattleScreenState extends State<BattleScreen> {
           color: controller.isAiThinking ? SiegeTheme.defender : SiegeTheme.muted,
           fontWeight: controller.isAiThinking ? FontWeight.w600 : FontWeight.normal,
         ),
-      ),
-    );
-  }
-
-  void _showDiscardDialog(
-      BuildContext context, GameController controller, GameState state) {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        backgroundColor: SiegeTheme.panel,
-        title: Text(
-          'Discard a card',
-          style: TextStyle(color: SiegeTheme.ink),
-        ),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: List.generate(
-            state.attacker.hand.length,
-            (index) {
-              final card = state.attacker.hand[index];
-              final def = attackerCards[card]!;
-              return ListTile(
-                title: Text(
-                  def.name,
-                  style: TextStyle(color: SiegeTheme.ink),
-                ),
-                onTap: () {
-                  Navigator.of(context).pop();
-                  controller.discardCard(index);
-                },
-              );
-            },
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(),
-            child: Text(
-              'Cancel',
-              style: TextStyle(color: SiegeTheme.muted),
-            ),
-          ),
-        ],
       ),
     );
   }
