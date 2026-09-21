@@ -525,6 +525,9 @@ class _BattleScreenState extends State<BattleScreen> {
                 def.cost,
               );
               
+              // Use unique key combining card, index, and turn to avoid collisions
+              final uniqueKey = '${state.turn}_${index}_${card.toString()}';
+              
               return Expanded(
                 child: Padding(
                   padding: EdgeInsets.only(
@@ -532,12 +535,15 @@ class _BattleScreenState extends State<BattleScreen> {
                   ),
                   // Fixed aspect ratio slot - all cards equal size
                   child: Dismissible(
-                    key: ValueKey('card_$index'),
+                    key: ValueKey(uniqueKey),
                     direction: DismissDirection.down,
+                    // Use confirmDismiss to prevent dismissal when not allowed
+                    confirmDismiss: (direction) async {
+                      return canPlay;
+                    },
+                    // Always discard in onDismissed (confirmDismiss already checked canPlay)
                     onDismissed: (direction) {
-                      if (canPlay) {
-                        controller.discardCard(index);
-                      }
+                      controller.discardCard(index);
                     },
                     child: AspectRatio(
                       aspectRatio: 2 / 3, // Portrait card slot (0.667)
