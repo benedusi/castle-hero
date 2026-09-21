@@ -508,6 +508,9 @@ class _BattleScreenState extends State<BattleScreen> {
   Widget _buildHand(GameController controller, GameState state) {
     final hand = state.attacker.hand;
     final canPlay = state.phase == Phase.player && !controller.isAiThinking;
+    
+    // Fingerprint full hand composition so all keys change when hand shrinks
+    final handFingerprint = hand.map((c) => c.toString()).join(',');
 
     return SizedBox(
       height: 160, // Taller for proper card aspect ratio
@@ -525,8 +528,8 @@ class _BattleScreenState extends State<BattleScreen> {
                 def.cost,
               );
               
-              // Use unique key combining card, index, and turn to avoid collisions
-              final uniqueKey = '${state.turn}_${index}_${card.toString()}';
+              // Key includes hand fingerprint - all keys change when hand composition changes
+              final uniqueKey = '${state.turn}|$handFingerprint|$index';
               
               return Expanded(
                 child: Padding(
