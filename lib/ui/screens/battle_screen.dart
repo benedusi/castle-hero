@@ -88,137 +88,138 @@ class _BattleScreenState extends State<BattleScreen> {
             ),
           ),
         ),
-        // HP bars at very top - mock §03 chrome + Day label inside
+        // Top chrome: HP strip + resources + Retreat (intrinsic sizing, no fixed heights)
         Positioned(
           top: 0,
           left: 0,
           right: 0,
           child: SafeArea(
             bottom: false,
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 14.0, vertical: 8.0),
-              child: Container(
-                height: 68, // Increased from 58 to accommodate statuses below bars
-                decoration: BoxDecoration(
-                  // Use production chrome frame as actual panel
-                  image: const DecorationImage(
-                    image: AssetImage('assets/art/production/chrome/hp-strip-frame.png'),
-                    fit: BoxFit.fill,
-                  ),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withOpacity(0.5),
-                      blurRadius: 8,
-                      offset: const Offset(0, 4),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                // HP strip with intrinsic height - no fixed Container height
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(14.0, 8.0, 14.0, 0),
+                  child: Container(
+                    decoration: BoxDecoration(
+                      // Use production chrome frame as actual panel
+                      image: const DecorationImage(
+                        image: AssetImage('assets/art/production/chrome/hp-strip-frame.png'),
+                        fit: BoxFit.fill,
+                      ),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.5),
+                          blurRadius: 8,
+                          offset: const Offset(0, 4),
+                        ),
+                      ],
                     ),
-                  ],
-                ),
-                child: Stack(
-                  children: [
-                    // HP bars
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 8.0),
-                      child: Row(
+                    child: IntrinsicHeight(
+                      child: Stack(
                         children: [
-                          // Catapult side (LEFT, warm)
-                          Expanded(
-                            child: _buildSideSlot(
-                              iconAsset: 'assets/art/production/icons/icon-catapult.png',
-                              current: state.attacker.catapult,
-                              max: state.catapultMax,
-                              isDefender: false,
-                              fire: state.catapultFire,
-                              infantry: null, // Infantry on wall only
+                          // HP bars
+                          Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 8.0),
+                            child: Row(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                // Catapult side (LEFT, warm)
+                                Expanded(
+                                  child: _buildSideSlot(
+                                    iconAsset: 'assets/art/production/icons/icon-catapult.png',
+                                    current: state.attacker.catapult,
+                                    max: state.catapultMax,
+                                    isDefender: false,
+                                    fire: state.catapultFire,
+                                    infantry: null, // Infantry on wall only
+                                  ),
+                                ),
+                                // Divider between sides
+                                Container(
+                                  width: 2,
+                                  margin: const EdgeInsets.symmetric(vertical: 4),
+                                  decoration: BoxDecoration(
+                                    gradient: LinearGradient(
+                                      begin: Alignment.topCenter,
+                                      end: Alignment.bottomCenter,
+                                      colors: [
+                                        Colors.white.withOpacity(0.1),
+                                        Colors.white.withOpacity(0.3),
+                                        Colors.white.withOpacity(0.1),
+                                      ],
+                                    ),
+                                  ),
+                                ),
+                                // Wall side (RIGHT, cool)
+                                Expanded(
+                                  child: _buildSideSlot(
+                                    iconAsset: 'assets/art/production/icons/icon-wall.png',
+                                    current: state.defender.wall,
+                                    max: state.wallMax,
+                                    isDefender: true,
+                                    fire: state.gateFire,
+                                    infantry: state.infantry,
+                                  ),
+                                ),
+                              ],
                             ),
                           ),
-                          // Divider between sides
-                          Container(
-                            width: 2,
-                            margin: const EdgeInsets.symmetric(vertical: 4),
-                            decoration: BoxDecoration(
-                              gradient: LinearGradient(
-                                begin: Alignment.topCenter,
-                                end: Alignment.bottomCenter,
-                                colors: [
-                                  Colors.white.withOpacity(0.1),
-                                  Colors.white.withOpacity(0.3),
-                                  Colors.white.withOpacity(0.1),
+                          // Day label (top-right inside HP frame)
+                          Positioned(
+                            top: 8,
+                            right: 12,
+                            child: Text(
+                              'Day ${state.turn}',
+                              style: TextStyle(
+                                fontFamily: 'Oswald',
+                                fontSize: 13,
+                                fontWeight: FontWeight.w500,
+                                color: SiegeTheme.muted,
+                                shadows: [
+                                  Shadow(
+                                    color: Colors.black.withOpacity(0.5),
+                                    blurRadius: 2,
+                                  ),
                                 ],
                               ),
-                            ),
-                          ),
-                          // Wall side (RIGHT, cool)
-                          Expanded(
-                            child: _buildSideSlot(
-                              iconAsset: 'assets/art/production/icons/icon-wall.png',
-                              current: state.defender.wall,
-                              max: state.wallMax,
-                              isDefender: true,
-                              fire: state.gateFire,
-                              infantry: state.infantry,
                             ),
                           ),
                         ],
                       ),
                     ),
-                    // Day label (top-right inside HP frame)
-                    Positioned(
-                      top: 8,
-                      right: 12,
-                      child: Text(
-                        'Day ${state.turn}',
-                        style: TextStyle(
-                          fontFamily: 'Oswald',
-                          fontSize: 13,
-                          fontWeight: FontWeight.w500,
-                          color: SiegeTheme.muted,
-                          shadows: [
-                            Shadow(
-                              color: Colors.black.withOpacity(0.5),
-                              blurRadius: 2,
-                            ),
-                          ],
-                        ),
+                  ),
+                ),
+                const SizedBox(height: 8),
+                // Resource chips
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 14.0),
+                  child: _buildResourceDisplay(state),
+                ),
+                const SizedBox(height: 8),
+                // Retreat button
+                Center(
+                  child: TextButton(
+                    onPressed: () => _handleRetreat(context, controller),
+                    style: TextButton.styleFrom(
+                      foregroundColor: SiegeTheme.muted,
+                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                      minimumSize: Size.zero,
+                      tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                    ),
+                    child: Text(
+                      'Retreat',
+                      style: TextStyle(
+                        fontFamily: 'Inter',
+                        fontSize: 11,
+                        decoration: TextDecoration.underline,
                       ),
                     ),
-                  ],
+                  ),
                 ),
-              ),
-            ),
-          ),
-        ),
-        // Resource chips directly below HP strip (smaller)
-        Positioned(
-          top: 84, // Just below HP strip (68 + 8 padding + 8 spacing)
-          left: 0,
-          right: 0,
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 14.0),
-            child: _buildResourceDisplay(state),
-          ),
-        ),
-        // Retreat button directly below resources (compact)
-        Positioned(
-          top: 134, // Below resources (84 + 42 height + 8 spacing)
-          left: 0,
-          right: 0,
-          child: Center(
-            child: TextButton(
-              onPressed: () => _handleRetreat(context, controller),
-              style: TextButton.styleFrom(
-                foregroundColor: SiegeTheme.muted,
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-                minimumSize: Size.zero,
-                tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-              ),
-              child: Text(
-                'Retreat',
-                style: TextStyle(
-                  fontFamily: 'Inter',
-                  fontSize: 11,
-                  decoration: TextDecoration.underline,
-                ),
-              ),
+              ],
             ),
           ),
         ),
