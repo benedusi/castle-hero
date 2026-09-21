@@ -98,7 +98,7 @@ class _BattleScreenState extends State<BattleScreen> {
             child: Padding(
               padding: const EdgeInsets.symmetric(horizontal: 14.0, vertical: 8.0),
               child: Container(
-                height: 58, // Taller to accommodate bars + statuses below
+                height: 68, // Increased from 58 to accommodate statuses below bars
                 decoration: BoxDecoration(
                   // Use production chrome frame as actual panel
                   image: const DecorationImage(
@@ -189,7 +189,7 @@ class _BattleScreenState extends State<BattleScreen> {
         ),
         // Resource chips directly below HP strip (smaller)
         Positioned(
-          top: 74, // Just below HP strip (58 + 8 padding + 8 spacing)
+          top: 84, // Just below HP strip (68 + 8 padding + 8 spacing)
           left: 0,
           right: 0,
           child: Padding(
@@ -199,7 +199,7 @@ class _BattleScreenState extends State<BattleScreen> {
         ),
         // Retreat button directly below resources (compact)
         Positioned(
-          top: 124, // Below resources (74 + 42 height + 8 spacing)
+          top: 134, // Below resources (84 + 42 height + 8 spacing)
           left: 0,
           right: 0,
           child: Center(
@@ -391,7 +391,7 @@ class _BattleScreenState extends State<BattleScreen> {
         ),
         // Below: status badges (fire medallion + DoT, infantry helmet + ×N)
         if (hasStatuses) ...[
-          const SizedBox(height: 3),
+          const SizedBox(height: 2), // Reduced from 3 for tighter fit
           Padding(
             padding: const EdgeInsets.only(left: 36), // Align below HP bar (after icon)
             child: Row(
@@ -399,10 +399,10 @@ class _BattleScreenState extends State<BattleScreen> {
               children: [
                 // Fire medallion + DoT countdown (under relevant bar)
                 if (fire.isNotEmpty) ...[
-                  // Flame medallion only (badge-fire tip)
+                  // Flame medallion only (badge-fire tip) - reduced size
                   SizedBox(
-                    width: 20,
-                    height: 20,
+                    width: 16, // Reduced from 20
+                    height: 16, // Reduced from 20
                     child: Image.asset(
                       'assets/art/production/badges/badge-fire.png',
                       fit: BoxFit.contain,
@@ -411,8 +411,8 @@ class _BattleScreenState extends State<BattleScreen> {
                   const SizedBox(width: 2),
                   // DoT countdown: first tick only
                   Container(
-                    width: 14,
-                    height: 14,
+                    width: 13, // Reduced from 14
+                    height: 13, // Reduced from 14
                     decoration: BoxDecoration(
                       color: Colors.black.withOpacity(0.7),
                       shape: BoxShape.circle,
@@ -426,7 +426,7 @@ class _BattleScreenState extends State<BattleScreen> {
                         '${fire.first}',
                         style: TextStyle(
                           fontFamily: 'Oswald',
-                          fontSize: 9,
+                          fontSize: 8, // Reduced from 9
                           fontWeight: FontWeight.w700,
                           color: SiegeTheme.danger,
                           height: 1.0,
@@ -434,14 +434,14 @@ class _BattleScreenState extends State<BattleScreen> {
                       ),
                     ),
                   ),
-                  if (infantry != null && infantry > 0) const SizedBox(width: 6),
+                  if (infantry != null && infantry > 0) const SizedBox(width: 4), // Reduced from 6
                 ],
                 // Infantry tags (wall only, can sit next to fire)
                 if (infantry != null && infantry > 0) ...[
-                  // Helmet badge
+                  // Helmet badge - reduced size
                   SizedBox(
-                    width: 18,
-                    height: 18,
+                    width: 16, // Reduced from 18
+                    height: 16, // Reduced from 18
                     child: Image.asset(
                       'assets/art/production/badges/badge-infantry.png',
                       fit: BoxFit.contain,
@@ -463,7 +463,7 @@ class _BattleScreenState extends State<BattleScreen> {
                       '×$infantry',
                       style: TextStyle(
                         fontFamily: 'Oswald',
-                        fontSize: 8,
+                        fontSize: 8, // Keep small
                         fontWeight: FontWeight.w700,
                         color: SiegeTheme.attacker,
                         height: 1.0,
