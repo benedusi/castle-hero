@@ -11,9 +11,14 @@ import '../widgets/card_widget.dart';
 import '../widgets/battle_log.dart';
 import '../widgets/battle_overlay.dart';
 
-class BattleScreen extends StatelessWidget {
+class BattleScreen extends StatefulWidget {
   const BattleScreen({super.key});
 
+  @override
+  State<BattleScreen> createState() => _BattleScreenState();
+}
+
+class _BattleScreenState extends State<BattleScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -47,64 +52,202 @@ class BattleScreen extends StatelessWidget {
 
   Widget _buildBattleContent(
       BuildContext context, GameController controller, GameState state) {
-    // Choose background based on game state
-    String backgroundAsset = 'assets/art/backgrounds/composite-battle-empty.jpg';
-    if (state.gateFire.isNotEmpty) {
-      backgroundAsset = 'assets/art/backgrounds/composite-battle-fire.jpg';
-    } else if (state.turn > 3) {
-      backgroundAsset = 'assets/art/backgrounds/composite-battle-midfight.jpg';
+    // Choose background based on game state - using production 9:16 plates
+    String backgroundAsset = 'assets/art/production/plates/stage-calm-9x16.png';
+    if (state.gateFire.isNotEmpty || state.turn > 5) {
+      // Use pressure plate for fire or later turns (dedicated fire plate coming in batch 2)
+      backgroundAsset = 'assets/art/production/plates/stage-pressure-9x16.png';
     }
 
     return Stack(
       children: [
-        // Full scene battle plate background
+        // Full-bleed 9:16 battle plate background
         Positioned.fill(
           child: Image.asset(
             backgroundAsset,
             fit: BoxFit.cover,
+            alignment: Alignment.center,
           ),
         ),
-        // Dark gradient for readability
-        Positioned.fill(
+        // Subtle gradient at bottom for chrome readability
+        Positioned(
+          left: 0,
+          right: 0,
+          bottom: 0,
+          height: 280, // Reduced from 350 to tighten dead band
           child: Container(
             decoration: BoxDecoration(
               gradient: LinearGradient(
                 begin: Alignment.topCenter,
                 end: Alignment.bottomCenter,
                 colors: [
-                  Colors.black.withOpacity(0.3),
-                  Colors.black.withOpacity(0.6),
+                  Colors.transparent,
+                  Colors.black.withOpacity(0.7),
                 ],
-                stops: const [0.0, 1.0],
               ),
             ),
           ),
         ),
-        // Battle UI overlay
-        SingleChildScrollView(
-          child: Padding(
-            padding: const EdgeInsets.all(14.0),
+        // Top chrome: HP strip + resources + Retreat (intrinsic sizing, no fixed heights)
+        Positioned(
+          top: 0,
+          left: 0,
+          right: 0,
+          child: SafeArea(
+            bottom: false,
             child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                _buildHeader(state),
-                const SizedBox(height: 12),
-                _buildHealthBars(state),
-                const SizedBox(height: 220), // Space for the middle battlefield art
-                BattleLog(log: state.log),
-                const SizedBox(height: 12),
-                ResourceDisplay(
-                  stone: state.attacker.stone,
-                  food: state.attacker.food,
-                  gold: state.attacker.gold,
+                // HP strip with intrinsic height - no fixed Container height
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(14.0, 8.0, 14.0, 0),
+                  child: Container(
+                    decoration: BoxDecoration(
+                      // Use production chrome frame as actual panel
+                      image: const DecorationImage(
+                        image: AssetImage('assets/art/production/chrome/hp-strip-frame.png'),
+                        fit: BoxFit.fill,
+                      ),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.5),
+                          blurRadius: 8,
+                          offset: const Offset(0, 4),
+                        ),
+                      ],
+                    ),
+                    child: IntrinsicHeight(
+                      child: Stack(
+                        children: [
+                          // HP bars
+                          Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 8.0),
+                            child: Row(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                // Catapult side (LEFT, warm)
+                                Expanded(
+                                  child: _buildSideSlot(
+                                    iconAsset: 'assets/art/production/icons/icon-catapult.png',
+                                    current: state.attacker.catapult,
+                                    max: state.catapultMax,
+                                    isDefender: false,
+                                    fire: state.catapultFire,
+                                    infantry: null, // Infantry on wall only
+                                  ),
+                                ),
+                                // Divider between sides
+                                Container(
+                                  width: 2,
+                                  margin: const EdgeInsets.symmetric(vertical: 4),
+                                  decoration: BoxDecoration(
+                                    gradient: LinearGradient(
+                                      begin: Alignment.topCenter,
+                                      end: Alignment.bottomCenter,
+                                      colors: [
+                                        Colors.white.withOpacity(0.1),
+                                        Colors.white.withOpacity(0.3),
+                                        Colors.white.withOpacity(0.1),
+                                      ],
+                                    ),
+                                  ),
+                                ),
+                                // Wall side (RIGHT, cool)
+                                Expanded(
+                                  child: _buildSideSlot(
+                                    iconAsset: 'assets/art/production/icons/icon-wall.png',
+                                    current: state.defender.wall,
+                                    max: state.wallMax,
+                                    isDefender: true,
+                                    fire: state.gateFire,
+                                    infantry: state.infantry,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          // Day label (top-right inside HP frame)
+                          Positioned(
+                            top: 8,
+                            right: 12,
+                            child: Text(
+                              'Day ${state.turn}',
+                              style: TextStyle(
+                                fontFamily: 'Oswald',
+                                fontSize: 13,
+                                fontWeight: FontWeight.w500,
+                                color: SiegeTheme.muted,
+                                shadows: [
+                                  Shadow(
+                                    color: Colors.black.withOpacity(0.5),
+                                    blurRadius: 2,
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
                 ),
-                const SizedBox(height: 10),
-                _buildHandHeader(state),
                 const SizedBox(height: 8),
-                _buildHand(controller, state),
-                const SizedBox(height: 12),
-                _buildActions(context, controller, state),
-                _buildHint(controller, state),
+                // Resource chips
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 14.0),
+                  child: _buildResourceDisplay(state),
+                ),
+                const SizedBox(height: 8),
+                // Retreat button
+                Center(
+                  child: TextButton(
+                    onPressed: () => _handleRetreat(context, controller),
+                    style: TextButton.styleFrom(
+                      foregroundColor: SiegeTheme.muted,
+                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                      minimumSize: Size.zero,
+                      tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                    ),
+                    child: Text(
+                      'Retreat',
+                      style: TextStyle(
+                        fontFamily: 'Inter',
+                        fontSize: 11,
+                        decoration: TextDecoration.underline,
+                      ),
+                    ),
+                  ),
+                ),
               ],
+            ),
+          ),
+        ),
+        // Bottom chrome bar: log → hand → actions
+        Positioned(
+          left: 0,
+          right: 0,
+          bottom: 0,
+          child: SafeArea(
+            top: false,
+            child: Padding(
+              padding: const EdgeInsets.all(14.0),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  // Battle log (1-2 lines)
+                  BattleLog(log: state.log),
+                  const SizedBox(height: 8),
+                  // Hand header
+                  _buildHandHeader(state),
+                  const SizedBox(height: 6),
+                  // Hand of 3
+                  _buildHand(controller, state),
+                  const SizedBox(height: 8),
+                  // Hint
+                  _buildHint(controller, state),
+                ],
+              ),
             ),
           ),
         ),
@@ -112,61 +255,228 @@ class BattleScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildHeader(GameState state) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-        Text(
-          'SIEGE',
-          style: TextStyle(
-            fontFamily: 'Oswald',
-            fontSize: 26,
-            fontWeight: FontWeight.w700,
-            letterSpacing: 1.56,
-            color: SiegeTheme.ink,
-          ),
-        ),
-        Text(
-          'Day ${state.turn}',
-          style: TextStyle(
-            fontFamily: 'Oswald',
-            fontSize: 15,
-            fontWeight: FontWeight.w500,
-            color: SiegeTheme.muted,
-          ),
-        ),
-      ],
+  Widget _buildResourceDisplay(GameState state) {
+    // No selection state - resources just show current balance
+    return ResourceDisplay(
+      stone: state.attacker.stone,
+      food: state.attacker.food,
+      gold: state.attacker.gold,
+      stoneUnaffordable: false,
+      foodUnaffordable: false,
+      goldUnaffordable: false,
     );
   }
 
-  Widget _buildHealthBars(GameState state) {
-    return Container(
-      padding: const EdgeInsets.all(14.0),
-      decoration: BoxDecoration(
-        color: SiegeTheme.panel.withOpacity(0.85),
-        border: Border.all(color: SiegeTheme.line),
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: Column(
-        children: [
-          HealthBar(
-            label: 'The castle — wall & gate',
-            current: state.defender.wall,
-            max: state.wallMax,
-            isDefender: true,
-            fire: state.gateFire,
-          ),
-          const SizedBox(height: 12),
-          HealthBar(
-            label: 'Your siege — catapult',
-            current: state.attacker.catapult,
-            max: state.catapultMax,
-            isDefender: false,
-            fire: state.catapultFire,
-            infantry: state.infantry,
+  Widget _buildSideSlot({
+    required String iconAsset,
+    required int current,
+    required int max,
+    required bool isDefender,
+    List<int> fire = const [],
+    int? infantry,
+  }) {
+    final percentage = (current / max).clamp(0.0, 1.0);
+    final color = isDefender ? SiegeTheme.defender : SiegeTheme.attacker;
+    final dimColor = isDefender ? SiegeTheme.defenderDim : SiegeTheme.attackerDim;
+
+    final hasStatuses = fire.isNotEmpty || (infantry != null && infantry > 0);
+
+    // Layout: HP bar on top, statuses below (not beside)
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // Top row: [framed icon][Expanded HP bar with trough + centered text]
+        Row(
+          children: [
+            // Framed icon (no ColorFilter)
+            SizedBox(
+              width: 32,
+              height: 32,
+              child: Image.asset(
+                iconAsset,
+                fit: BoxFit.contain,
+              ),
+            ),
+            const SizedBox(width: 4),
+            // HP bar with trough chrome + centered text (Expanded to fill available width)
+            Expanded(
+              child: Container(
+                height: 32,
+                decoration: BoxDecoration(
+                  // Use production trough chrome as background
+                  image: const DecorationImage(
+                    image: AssetImage('assets/art/production/chrome/hp-bar-trough.png'),
+                    fit: BoxFit.fill,
+                  ),
+                ),
+                child: Stack(
+                  children: [
+                    // HP fill gradient
+                    Padding(
+                      padding: const EdgeInsets.all(3.0),
+                      child: FractionallySizedBox(
+                        alignment: Alignment.centerLeft,
+                        widthFactor: percentage,
+                        child: Container(
+                          decoration: BoxDecoration(
+                            gradient: LinearGradient(
+                              colors: [dimColor, color],
+                            ),
+                            borderRadius: BorderRadius.circular(3),
+                          ),
+                        ),
+                      ),
+                    ),
+                    // Centered HP text - fully readable, never covered
+                    Center(
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(
+                            '$current',
+                            style: TextStyle(
+                              fontFamily: 'Oswald',
+                              fontSize: 16,
+                              fontWeight: FontWeight.w700,
+                              color: Colors.white,
+                              shadows: [
+                                Shadow(
+                                  color: Colors.black.withOpacity(0.9),
+                                  blurRadius: 3,
+                                  offset: const Offset(0, 1),
+                                ),
+                              ],
+                            ),
+                          ),
+                          Text(
+                            ' / ',
+                            style: TextStyle(
+                              fontFamily: 'Oswald',
+                              fontSize: 12,
+                              fontWeight: FontWeight.w400,
+                              color: Colors.white.withOpacity(0.9),
+                              shadows: [
+                                Shadow(
+                                  color: Colors.black.withOpacity(0.9),
+                                  blurRadius: 3,
+                                  offset: const Offset(0, 1),
+                                ),
+                              ],
+                            ),
+                          ),
+                          Text(
+                            '$max',
+                            style: TextStyle(
+                              fontFamily: 'Oswald',
+                              fontSize: 14,
+                              fontWeight: FontWeight.w500,
+                              color: Colors.white.withOpacity(0.9),
+                              shadows: [
+                                Shadow(
+                                  color: Colors.black.withOpacity(0.9),
+                                  blurRadius: 3,
+                                  offset: const Offset(0, 1),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        ),
+        // Below: status badges (fire medallion + DoT, infantry helmet + ×N)
+        if (hasStatuses) ...[
+          const SizedBox(height: 2), // Reduced from 3 for tighter fit
+          Padding(
+            padding: const EdgeInsets.only(left: 36), // Align below HP bar (after icon)
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                // Fire medallion + DoT countdown (under relevant bar)
+                if (fire.isNotEmpty) ...[
+                  // Flame medallion only (badge-fire tip) - reduced size
+                  SizedBox(
+                    width: 16, // Reduced from 20
+                    height: 16, // Reduced from 20
+                    child: Image.asset(
+                      'assets/art/production/badges/badge-fire.png',
+                      fit: BoxFit.contain,
+                    ),
+                  ),
+                  const SizedBox(width: 2),
+                  // DoT countdown: first tick only
+                  Container(
+                    width: 13, // Reduced from 14
+                    height: 13, // Reduced from 14
+                    decoration: BoxDecoration(
+                      color: Colors.black.withOpacity(0.7),
+                      shape: BoxShape.circle,
+                      border: Border.all(
+                        color: SiegeTheme.danger.withOpacity(0.9),
+                        width: 1,
+                      ),
+                    ),
+                    child: Center(
+                      child: Text(
+                        '${fire.first}',
+                        style: TextStyle(
+                          fontFamily: 'Oswald',
+                          fontSize: 8, // Reduced from 9
+                          fontWeight: FontWeight.w700,
+                          color: SiegeTheme.danger,
+                          height: 1.0,
+                        ),
+                      ),
+                    ),
+                  ),
+                  if (infantry != null && infantry > 0) const SizedBox(width: 4), // Reduced from 6
+                ],
+                // Infantry tags (wall only, can sit next to fire)
+                if (infantry != null && infantry > 0) ...[
+                  // Helmet badge - reduced size
+                  SizedBox(
+                    width: 16, // Reduced from 18
+                    height: 16, // Reduced from 18
+                    child: Image.asset(
+                      'assets/art/production/badges/badge-infantry.png',
+                      fit: BoxFit.contain,
+                    ),
+                  ),
+                  const SizedBox(width: 2),
+                  // ×N tag with live Flutter text
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 3, vertical: 1),
+                    decoration: BoxDecoration(
+                      color: Colors.black.withOpacity(0.7),
+                      borderRadius: BorderRadius.circular(3),
+                      border: Border.all(
+                        color: SiegeTheme.attacker.withOpacity(0.9),
+                        width: 1,
+                      ),
+                    ),
+                    child: Text(
+                      '×$infantry',
+                      style: TextStyle(
+                        fontFamily: 'Oswald',
+                        fontSize: 8, // Keep small
+                        fontWeight: FontWeight.w700,
+                        color: SiegeTheme.attacker,
+                        height: 1.0,
+                      ),
+                    ),
+                  ),
+                ],
+              ],
+            ),
           ),
         ],
-      ),
+      ],
     );
   }
 
@@ -199,9 +509,12 @@ class BattleScreen extends StatelessWidget {
   Widget _buildHand(GameController controller, GameState state) {
     final hand = state.attacker.hand;
     final canPlay = state.phase == Phase.player && !controller.isAiThinking;
+    
+    // Fingerprint full hand composition so all keys change when hand shrinks
+    final handFingerprint = hand.map((c) => c.toString()).join(',');
 
     return SizedBox(
-      height: 140,
+      height: 160, // Taller for proper card aspect ratio
       child: Row(
         children: List.generate(
           3,
@@ -215,23 +528,63 @@ class BattleScreen extends StatelessWidget {
                 state.attacker.gold,
                 def.cost,
               );
-
+              
+              // Key includes hand fingerprint - all keys change when hand composition changes
+              final uniqueKey = '${state.turn}|$handFingerprint|$index';
+              
               return Expanded(
                 child: Padding(
                   padding: EdgeInsets.only(
                     right: index < 2 ? 8.0 : 0,
                   ),
-                  child: CardWidget(
-                    card: def,
-                    canPlay: canPlay && canAffordCard,
-                    onTap: canPlay ? () => controller.playCard(index) : null,
+                  // Fixed aspect ratio slot - all cards equal size
+                  child: Dismissible(
+                    key: ValueKey(uniqueKey),
+                    direction: DismissDirection.down,
+                    // Use confirmDismiss to prevent dismissal when not allowed
+                    confirmDismiss: (direction) async {
+                      return canPlay;
+                    },
+                    // Always discard in onDismissed (confirmDismiss already checked canPlay)
+                    onDismissed: (direction) {
+                      controller.discardCard(index);
+                    },
+                    child: AspectRatio(
+                      aspectRatio: 2 / 3, // Portrait card slot (0.667)
+                      child: GestureDetector(
+                        onTap: canPlay && canAffordCard ? () {
+                          controller.playCard(index);
+                        } : null,
+                        child: CardWidget(
+                          card: def,
+                          canPlay: canPlay && canAffordCard,
+                          onTap: null, // Tap handled by GestureDetector above
+                        ),
+                      ),
+                    ),
                   ),
                 ),
               );
             } else {
+              // Empty slot - same fixed aspect ratio footprint
               return Expanded(
-                child: Container(
-                  margin: EdgeInsets.only(right: index < 2 ? 8.0 : 0),
+                child: Padding(
+                  padding: EdgeInsets.only(
+                    right: index < 2 ? 8.0 : 0,
+                  ),
+                  child: AspectRatio(
+                    aspectRatio: 2 / 3,
+                    child: Container(
+                      decoration: BoxDecoration(
+                        color: SiegeTheme.background.withOpacity(0.3),
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border.all(
+                          color: SiegeTheme.line.withOpacity(0.2),
+                          width: 1,
+                        ),
+                      ),
+                    ),
+                  ),
                 ),
               );
             }
@@ -241,72 +594,12 @@ class BattleScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildActions(
-      BuildContext context, GameController controller, GameState state) {
-    final canAct = state.phase == Phase.player && !controller.isAiThinking;
-
-    return Row(
-      children: [
-        Expanded(
-          child: ElevatedButton(
-            onPressed: canAct && state.attacker.hand.isNotEmpty
-                ? () => _showDiscardDialog(context, controller, state)
-                : null,
-            style: ElevatedButton.styleFrom(
-              backgroundColor: SiegeTheme.panel,
-              foregroundColor: SiegeTheme.ink,
-              disabledBackgroundColor: SiegeTheme.panel2,
-              padding: const EdgeInsets.symmetric(vertical: 11),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(10),
-                side: BorderSide(color: SiegeTheme.line),
-              ),
-            ),
-            child: Text(
-              'DISCARD',
-              style: TextStyle(
-                fontFamily: 'Oswald',
-                fontSize: 13,
-                fontWeight: FontWeight.w600,
-                letterSpacing: 0.52,
-              ),
-            ),
-          ),
-        ),
-        const SizedBox(width: 8),
-        Expanded(
-          child: ElevatedButton(
-            onPressed: () => _handleRetreat(context, controller),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: SiegeTheme.panel,
-              foregroundColor: SiegeTheme.ink,
-              padding: const EdgeInsets.symmetric(vertical: 11),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(10),
-                side: BorderSide(color: SiegeTheme.line),
-              ),
-            ),
-            child: Text(
-              'RETREAT',
-              style: TextStyle(
-                fontFamily: 'Oswald',
-                fontSize: 13,
-                fontWeight: FontWeight.w600,
-                letterSpacing: 0.52,
-              ),
-            ),
-          ),
-        ),
-      ],
-    );
-  }
-
   Widget _buildHint(GameController controller, GameState state) {
     String hint;
     if (controller.isAiThinking) {
       hint = 'The castle takes aim…';
     } else if (state.phase == Phase.player) {
-      hint = 'Play or discard one card to end your turn.';
+      hint = 'Tap to play · swipe down to discard';
     } else {
       hint = '';
     }
@@ -322,49 +615,6 @@ class BattleScreen extends StatelessWidget {
           color: controller.isAiThinking ? SiegeTheme.defender : SiegeTheme.muted,
           fontWeight: controller.isAiThinking ? FontWeight.w600 : FontWeight.normal,
         ),
-      ),
-    );
-  }
-
-  void _showDiscardDialog(
-      BuildContext context, GameController controller, GameState state) {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        backgroundColor: SiegeTheme.panel,
-        title: Text(
-          'Discard a card',
-          style: TextStyle(color: SiegeTheme.ink),
-        ),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: List.generate(
-            state.attacker.hand.length,
-            (index) {
-              final card = state.attacker.hand[index];
-              final def = attackerCards[card]!;
-              return ListTile(
-                title: Text(
-                  def.name,
-                  style: TextStyle(color: SiegeTheme.ink),
-                ),
-                onTap: () {
-                  Navigator.of(context).pop();
-                  controller.discardCard(index);
-                },
-              );
-            },
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(),
-            child: Text(
-              'Cancel',
-              style: TextStyle(color: SiegeTheme.muted),
-            ),
-          ),
-        ],
       ),
     );
   }

@@ -16,42 +16,15 @@ class CampaignMapScreen extends StatelessWidget {
           builder: (context, controller, _) {
             return Stack(
               children: [
-                // Campaign map background
+                // Clean campaign map 9:16 plate (no nodes/labels/chrome)
                 Positioned.fill(
                   child: Image.asset(
-                    'assets/art/campaign/campaign-map.jpg',
+                    'assets/art/production/plates/campaign-map-9x16.png',
                     fit: BoxFit.cover,
                   ),
                 ),
-                // Dark gradient for readability
-                Positioned.fill(
-                  child: Container(
-                    decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        begin: Alignment.topCenter,
-                        end: Alignment.bottomCenter,
-                        colors: [
-                          SiegeTheme.background.withOpacity(0.5),
-                          SiegeTheme.background.withOpacity(0.8),
-                        ],
-                      ),
-                    ),
-                  ),
-                ),
-                // Content overlay
-                SingleChildScrollView(
-                  child: Padding(
-                    padding: const EdgeInsets.all(16.0),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        _buildHeader(controller),
-                        const SizedBox(height: 24),
-                        _buildNodeList(context, controller),
-                      ],
-                    ),
-                  ),
-                ),
+                // Campaign path composition in Flutter
+                _buildCampaignPath(context, controller),
               ],
             );
           },
@@ -60,12 +33,61 @@ class CampaignMapScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildHeader(GameController controller) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
+  Widget _buildCampaignPath(BuildContext context, GameController controller) {
+    final nodes = controller.campaign.nodes;
+    final size = MediaQuery.of(context).size;
+    
+    // Node positions based on campaign-layout-ref.png
+    // Nodes are positioned along the path from bottom to top
+    final nodePositions = [
+      {'top': 0.82, 'left': 0.50}, // Node 0: The Outpost (bottom)
+      {'top': 0.67, 'left': 0.50}, // Node 1: The Keep
+      {'top': 0.52, 'left': 0.50}, // Node 2: The Citadel
+      {'top': 0.37, 'left': 0.50}, // Node 3: The Bastion
+      {'top': 0.15, 'left': 0.50}, // Node 4: The Fortress/Throne (top)
+    ];
+    
+    return Stack(
       children: [
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        // Header
+        Positioned(
+          top: 16,
+          left: 16,
+          right: 16,
+          child: _buildHeader(controller),
+        ),
+        // Position 5 campaign nodes using layout ref coordinates
+        ...nodes.asMap().entries.map((entry) {
+          final index = entry.key;
+          final node = entry.value;
+          final isLast = index == nodes.length - 1;
+          final pos = nodePositions[index];
+          
+          return Positioned(
+            top: size.height * pos['top']!,
+            left: size.width * pos['left']!,
+            child: Transform.translate(
+              offset: const Offset(-60, -60), // Center the 120px node
+              child: _CampaignNode(
+                node: node,
+                isLast: isLast,
+                onTap: node.status == NodeStatus.current
+                    ? () => _startBattle(context, controller)
+                    : null,
+              ),
+            ),
+          );
+        }).toList(),
+      ],
+    );
+  }
+
+  Widget _buildHeader(GameController controller) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
               'CAMPAIGN',
@@ -77,43 +99,30 @@ class CampaignMapScreen extends StatelessWidget {
                 color: SiegeTheme.ink,
               ),
             ),
-            if (controller.isCrowned())
-              const Text(
-                '👑',
-                style: TextStyle(fontSize: 24),
+            const SizedBox(height: 4),
+            Text(
+              'March to the crown',
+              style: TextStyle(
+                fontFamily: 'Inter',
+                fontSize: 14,
+                color: SiegeTheme.muted,
               ),
+            ),
           ],
         ),
-        const SizedBox(height: 4),
-        Text(
-          'March to the crown',
-          style: TextStyle(
-            fontFamily: 'Inter',
-            fontSize: 14,
-            color: SiegeTheme.muted,
+        if (controller.isCrowned())
+          Container(
+            padding: const EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              color: SiegeTheme.attackerGold.withOpacity(0.2),
+              shape: BoxShape.circle,
+            ),
+            child: const Text(
+              '👑',
+              style: TextStyle(fontSize: 24),
+            ),
           ),
-        ),
       ],
-    );
-  }
-
-  Widget _buildNodeList(BuildContext context, GameController controller) {
-    final nodes = controller.campaign.nodes;
-
-    return Column(
-      children: nodes.asMap().entries.map((entry) {
-        final index = entry.key;
-        final node = entry.value;
-        final isLast = index == nodes.length - 1;
-
-        return _CampaignNode(
-          node: node,
-          isLast: isLast,
-          onTap: node.status == NodeStatus.current
-              ? () => _startBattle(context, controller)
-              : null,
-        );
-      }).toList(),
     );
   }
 
@@ -147,113 +156,91 @@ class _CampaignNode extends StatelessWidget {
     final isCurrent = node.status == NodeStatus.current;
     final isLocked = node.status == NodeStatus.locked;
 
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 24.0),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
+    return Container(
+      width: 280,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
         children: [
+          // Production node badge (labels baked in)
           _buildBadge(isCompleted, isCurrent, isLocked),
-          const SizedBox(width: 16),
-          Expanded(
-            child: _buildInfo(context, isCompleted, isCurrent, isLocked),
-          ),
+          // Only show attack button for current node
+          if (isCurrent) ...[
+            const SizedBox(height: 12),
+            SizedBox(
+              width: 180,
+              child: ElevatedButton(
+                onPressed: onTap,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: SiegeTheme.attacker,
+                  foregroundColor: SiegeTheme.background,
+                  padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  elevation: 4,
+                ),
+                child: Text(
+                  'ATTACK',
+                  style: TextStyle(
+                    fontFamily: 'Oswald',
+                    fontSize: 15,
+                    fontWeight: FontWeight.w700,
+                    letterSpacing: 0.75,
+                  ),
+                ),
+              ),
+            ),
+          ],
         ],
       ),
     );
   }
 
   Widget _buildBadge(bool isCompleted, bool isCurrent, bool isLocked) {
-    // Choose node state icon
+    // Choose production node state asset (labels baked in)
     String assetPath;
     if (isCompleted) {
-      assetPath = 'assets/art/campaign/node_conquered.png';
+      assetPath = 'assets/art/production/nodes/node-conquered.png';
     } else if (isLast) {
-      assetPath = 'assets/art/campaign/node_crown.png';
+      assetPath = 'assets/art/production/nodes/node-throne.png';
     } else if (isCurrent) {
-      assetPath = 'assets/art/campaign/node_current.png';
+      assetPath = 'assets/art/production/nodes/node-current.png';
     } else {
-      assetPath = 'assets/art/campaign/node_locked.png';
+      assetPath = 'assets/art/production/nodes/node-locked.png';
     }
 
     return Container(
-      width: 64,
-      height: 64,
+      width: 120,
+      height: 120,
       decoration: BoxDecoration(
-        shape: BoxShape.circle,
+        borderRadius: BorderRadius.circular(16),
         boxShadow: isCurrent
             ? [
                 BoxShadow(
-                  color: SiegeTheme.attacker.withOpacity(0.4),
-                  blurRadius: 12,
-                  spreadRadius: 2,
+                  color: SiegeTheme.attacker.withOpacity(0.5),
+                  blurRadius: 16,
+                  spreadRadius: 3,
                 )
               ]
             : null,
       ),
-      child: ClipOval(
-        child: Image.asset(
-          assetPath,
-          fit: BoxFit.cover,
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(16),
+        child: ColorFiltered(
+          colorFilter: isLocked
+              ? ColorFilter.mode(
+                  Colors.black.withOpacity(0.5),
+                  BlendMode.darken,
+                )
+              : const ColorFilter.mode(
+                  Colors.transparent,
+                  BlendMode.multiply,
+                ),
+          child: Image.asset(
+            assetPath,
+            fit: BoxFit.contain,
+          ),
         ),
-      ),
-    );
-  }
-
-  Widget _buildInfo(
-      BuildContext context, bool isCompleted, bool isCurrent, bool isLocked) {
-    return Opacity(
-      opacity: isLocked ? 0.5 : 1.0,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            node.tier.name,
-            style: TextStyle(
-              fontFamily: 'Oswald',
-              fontSize: 19,
-              fontWeight: FontWeight.w600,
-              letterSpacing: 0.38,
-              color: isLocked ? SiegeTheme.muted : SiegeTheme.ink,
-            ),
-          ),
-          const SizedBox(height: 4),
-          Text(
-            isCompleted
-                ? 'Conquered'
-                : isCurrent
-                    ? 'HP ${node.tier.hp} • Sight ${node.tier.aiConfig.sight}'
-                    : 'Locked',
-            style: TextStyle(
-              fontFamily: 'Inter',
-              fontSize: 13,
-              color: SiegeTheme.muted,
-            ),
-          ),
-          if (isCurrent) ...[
-            const SizedBox(height: 12),
-            ElevatedButton(
-              onPressed: onTap,
-              style: ElevatedButton.styleFrom(
-                backgroundColor: SiegeTheme.attacker,
-                foregroundColor: const Color(0xFF1a1109),
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 18, vertical: 9),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(9),
-                ),
-              ),
-              child: Text(
-                'LAY SIEGE',
-                style: TextStyle(
-                  fontFamily: 'Oswald',
-                  fontSize: 13,
-                  fontWeight: FontWeight.w600,
-                  letterSpacing: 0.52,
-                ),
-              ),
-            ),
-          ],
-        ],
       ),
     );
   }
